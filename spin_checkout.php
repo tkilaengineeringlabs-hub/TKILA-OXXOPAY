@@ -3,12 +3,12 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 /*
-Plugin Name: OXXO PAY powered by Spin
-Plugin URI: https://wordpress.org/plugins/digitalfemsa-payment-gateway/
-Description: Vende en línea y recibe pagos en más de 25,000 tiendas OXXO de México.
+Plugin Name: Tkila OXXO PAY
+Plugin URI: https://github.com/tkilaengineeringlabs-hub/TKILA-OXXOPAY
+Description: Pasarela OXXO PAY para WooCommerce, personalizada por Tkila Intelligence Labs.
 Version:1.0.12
-Author: DigitalFemsa.io
-Author URI: https://www.digitalfemsa.io
+Author: Tkila Intelligence Labs
+Author URI: https://github.com/tkilaengineeringlabs-hub
 License: GNU General Public License v3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 */
