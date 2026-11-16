@@ -18,13 +18,13 @@ class Spin_Plugin extends WC_Payment_Gateway
 {
 	public $version  = "1.0.12";
 
-    public $name = "WooCommerce 2";
+    public $name = "Tkila OXXO PAY";
 
-	public $description = "Spin for Woocommerce for cash payments";
-	public $plugin_name = "Spin for Woocommerce";
-	public $plugin_URI = "https://wordpress.org/plugins/digitalfemsa-payment-gateway/";
-	public $author = "DigitalFemsa.io";
-	public $author_URI = "https://www.digitalfemsa.io";
+	public $description = "Pasarela OXXO PAY para WooCommerce, personalizada por Tkila Intelligence Labs";
+	public $plugin_name = "Tkila OXXO PAY";
+	public $plugin_URI = "https://github.com/tkilaengineeringlabs-hub/TKILA-OXXOPAY";
+	public $author = "Tkila Intelligence Labs";
+	public $author_URI = "https://github.com/tkilaengineeringlabs-hub";
 
 	public function spin_get_version()
 	{
