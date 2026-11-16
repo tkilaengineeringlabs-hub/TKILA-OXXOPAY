@@ -1,7 +1,9 @@
 [![PHP](https://img.shields.io/badge/PHP-v8.1-success.svg)](https://www.php.net/)
 [![WooCommerce](https://img.shields.io/badge/WooCommerce-10.3.0-success.svg)](https://woocommerce.com/)
 
-# OXXO PAY powered by Spin WooCommerce Plugin
+# Tkila OXXO PAY
+
+Personalizado por **Tkila Intelligence Labs** para WooCommerce. Basado en el plugin de Digital FEMSA; conserva la integración con su API y los avisos de licencia originales.
 
 ## Content
 
@@ -21,7 +23,7 @@
 
 ### What the project does
 
-The OXXO PAY powered by Spin WooCommerce plugin project is designed to function as a connector between WooCommerce and OXXO. This is an Open Source and free plugin. It bundles functionality to process cash payments securely as well as send email notifications to your customers when they complete a successful purchase.
+The Tkila OXXO PAY plugin project is designed to function as a connector between WooCommerce and OXXO. This is an Open Source and free plugin. It bundles functionality to process cash payments securely as well as send email notifications to your customers when they complete a successful purchase.
 
 ### Why it's useful
 
