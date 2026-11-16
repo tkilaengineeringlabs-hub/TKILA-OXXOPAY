@@ -37,7 +37,7 @@ class Spin_Block_Gateway extends Spin_Plugin
     public function __construct()
     {
         $this->id = 'spin';
-        $this->method_title = 'OXXO PAY powered by Spin';
+        $this->method_title = 'Tkila OXXO PAY';
         $this->method_description = 'Permite a tus clientes pagar compras en línea en efectivo en más de 25,000 tiendas OXXO, con confirmación de pago en tiempo real y actualización automática de las ordenes.';
         $this->has_fields = true;
         $this->spin_init_form_fields();
@@ -212,7 +212,7 @@ class Spin_Block_Gateway extends Spin_Plugin
             'enabled' => array(
                 'type' => 'checkbox',
                 'title' => __('Habilitar/Deshabilitar', 'Spin'),
-                'label' => __('Habilitar Spin', 'Spin'),
+                'label' => __('Habilitar Tkila OXXO PAY', 'Spin'),
                 'default' => 'yes'
             ),
             'title' => array(
