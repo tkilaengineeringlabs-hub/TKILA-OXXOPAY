@@ -53,3 +53,22 @@ Monetary inputs are rounded explicitly half-up to integer cents, within the SDK 
 - Installed TeraWallet version, fee persistence, wallet tax mode, debit timing, reservations, retries and refunds. A correct total does not prove that wallet funds have been reserved or debited.
 - FEMSA sandbox acceptance of split price lines, zero-price items, payment limits and any future agreed wallet representation. No provider API has been called by this suite.
 - Existing webhook/status behavior is outside this phase. The tests do not assert real stock, email or wallet lifecycle behavior.
+
+
+## Webhook ownership and state hardening (Tkila)
+
+Run after pulling the latest code:
+
+```sh
+php -l spin_plugin.php
+php -l spin_block_gateway.php
+php tests/webhook-ownership.php
+php tests/amounts.php
+php tests/checkout-guard.php
+```
+
+The isolated `webhook-ownership.php` test checks that an incoming event cannot select a WooCommerce order by metadata alone. It requires the matching provider order ID saved on that order, the matching local gateway (`spin`), and the expected integration marker. Invalid IDs, mismatched references, other payment methods and missing metadata must be rejected. It requires neither credentials nor a provider connection.
+
+The gateway now rejects invalid JSON, checks the provider status before state changes, ignores already-paid orders on duplicate paid events, and does not cancel already-paid/refunded/cancelled orders on stale closure events. Metadata is read/written via WooCommerce order CRUD to support HPOS.
+
+**Limits:** These tests do not execute real webhook HTTP requests, verify any provider signature, or simulate concurrent delivery. Provider lookup is used as the remote status authority; sandbox tests of paid, expired, cancelled, duplicate and out-of-order events are still required before production. Existing reference creation is not generally idempotent under concurrent checkout.
