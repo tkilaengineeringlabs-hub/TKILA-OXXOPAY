@@ -1,0 +1,12 @@
+{
+    "name": "digitalfemsa/spin-plugin",
+    "authors": [
+        {
+            "name": "digitalfemsa",
+            "email": "monitoreo.b2b@digitalfemsa.com"
+        }
+    ],
+    "require": {
+        "digitalfemsa/femsa-php": "1.1.0"
+    }
+}
