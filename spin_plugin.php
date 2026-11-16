@@ -85,10 +85,16 @@ class Spin_Plugin extends WC_Payment_Gateway
         exit;
     }
     public static function check_if_payment_payment_method_webhook(string $payment_method, array $event){
-        $spin_order = $event['data']['object'];
-        if ($spin_order["metadata"]["payment_method"] !==  $payment_method){
+        $method = $event['data']['object']['metadata']['payment_method'] ?? null;
+        if (!is_string($method) || $method === '') {
+            http_response_code(400);
             header('Content-Type: application/json');
-            echo wp_json_encode(['message' => 'OK', 'payment_method'=> $spin_order["metadata"]["payment_method"]]);
+            echo wp_json_encode(array('error' => 'Missing payment method'));
+            exit;
+        }
+        if ($method !== $payment_method) {
+            header('Content-Type: application/json');
+            echo wp_json_encode(array('message' => 'Ignored payment method'));
             exit;
         }
     }
@@ -108,6 +114,7 @@ class Spin_Plugin extends WC_Payment_Gateway
         if (!is_string($remote_id) || $remote_id === '' ||
             (!is_string($reference) && !is_int($reference)) ||
             !preg_match('/^[1-9][0-9]*$/D', (string) $reference) ||
+            (string) (int) $reference !== (string) $reference ||
             $method !== 'Spin_Block_Gateway') {
             return false;
         }
