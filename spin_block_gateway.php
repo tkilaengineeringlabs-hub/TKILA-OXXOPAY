@@ -109,6 +109,12 @@ class Spin_Block_Gateway extends Spin_Plugin
         }
 
         $event = json_decode(file_get_contents("php://input"), true);
+        if (!is_array($event) || !isset($event['type']) || !is_string($event['type'])) {
+            http_response_code(400);
+            header('Content-Type: application/json');
+            echo wp_json_encode(array('error' => 'Invalid webhook payload'));
+            exit;
+        }
 
         switch ($event['type']) {
             case 'webhook_ping':
@@ -187,7 +193,7 @@ class Spin_Block_Gateway extends Spin_Plugin
     function spin_thankyou_page($order_id)
     {
         $order = new WC_Order($order_id);
-        $spin_order_id = get_post_meta($order->get_id(), 'spin-order-id', true);
+        $spin_order_id = $order->get_meta('spin-order-id', true);
 
         if (empty($spin_order_id)) {
             return;
@@ -334,8 +340,9 @@ class Spin_Block_Gateway extends Spin_Plugin
         }
         try {
             $orderCreated = $this->get_api_instance()->createOrder($rq);
-            update_post_meta($order->get_id(), 'spin-order-id', $orderCreated->getId());
-            $order->update_status('on-hold', __('Awaiting the digital femsa cash payment', 'Spin'));
+            $order->update_meta_data('spin-order-id', $orderCreated->getId());
+            $order->save();
+            $order->update_status('on-hold', __('Esperando el pago en efectivo de OXXO PAY', 'Spin'));
             return array(
                 'result' => 'success',
                 'redirect' => $this->get_return_url($order)
