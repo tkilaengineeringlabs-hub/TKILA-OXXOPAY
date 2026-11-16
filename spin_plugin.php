@@ -93,61 +93,111 @@ class Spin_Plugin extends WC_Payment_Gateway
         }
     }
     /**
-     * @throws ApiException
+     * Resolve the order only when the event is linked to a reference that was
+     * actually created for this WooCommerce order and payment gateway.
+     * Never trust metadata.reference_id alone to mutate an order.
+     *
+     * @return WC_Order|false
+     */
+    public static function resolve_webhook_order(array $spin_order)
+    {
+        $remote_id = $spin_order['id'] ?? null;
+        $reference = $spin_order['metadata']['reference_id'] ?? null;
+        $method = $spin_order['metadata']['payment_method'] ?? null;
+
+        if (!is_string($remote_id) || $remote_id === '' ||
+            (!is_string($reference) && !is_int($reference)) ||
+            !preg_match('/^[1-9][0-9]*$/D', (string) $reference) ||
+            $method !== 'Spin_Block_Gateway') {
+            return false;
+        }
+
+        $order = wc_get_order((int) $reference);
+        if (!$order || $order->get_payment_method() !== 'spin') {
+            return false;
+        }
+
+        $stored_id = $order->get_meta('spin-order-id', true);
+        if (!is_scalar($stored_id) || (string) $stored_id === '' ||
+            !hash_equals((string) $stored_id, $remote_id)) {
+            return false;
+        }
+
+        return $order;
+    }
+
+    private static function webhook_response(int $status, array $body): void
+    {
+        http_response_code($status);
+        header('Content-Type: application/json');
+        echo wp_json_encode($body);
+        exit;
+    }
+
+    /**
+     * Only a verified paid status from the provider may complete the order.
      */
     public static function handleOrderPaid(OrdersApi $ordersApi, array $event)
     {
-        $spin_order = $event['data']['object'];
-        if (!self::validate_reference_id($spin_order)) {
-            http_response_code(400);
-            header('Content-Type: application/json');
-            echo wp_json_encode(['error' => 'Invalid order id']);
-            exit;
-        }
-        $order_id = $spin_order['metadata']['reference_id'];
-
-        if (!self::check_order_status($ordersApi, $spin_order['id'], array('paid'))) {
-            http_response_code(400);
-            header('Content-Type: application/json');
-            echo wp_json_encode(['error' => 'Invalid order status', 'order_id' => $order_id]);
-            exit;
+        $spin_order = $event['data']['object'] ?? array();
+        $order = is_array($spin_order) ? self::resolve_webhook_order($spin_order) : false;
+        if (!$order) {
+            self::webhook_response(400, array('error' => 'Order/reference mismatch'));
         }
 
-        $order = new WC_Order($order_id);
-        $charge = $spin_order['charges']['data'][0];
-        $paid_at = gmdate("Y-m-d", $charge['paid_at']);
-        update_post_meta($order->get_id(), 'spin-paid-at', $paid_at);
+        try {
+            $paid = self::check_order_status($ordersApi, $spin_order['id'], array('paid'));
+        } catch (Exception $exception) {
+            self::webhook_response(503, array('error' => 'Payment status unavailable'));
+        }
+        if (!$paid) {
+            self::webhook_response(409, array('error' => 'Payment not confirmed'));
+        }
+
+        if ($order->is_paid()) {
+            self::webhook_response(200, array('message' => 'Already paid', 'order_id' => $order->get_id()));
+        }
+
+        // A cancelled/refunded order needs manual reconciliation, not a silent revival.
+        if (in_array($order->get_status(), array('cancelled', 'refunded'), true)) {
+            self::webhook_response(409, array('error' => 'Order requires reconciliation'));
+        }
+
+        $paid_at = $spin_order['charges']['data'][0]['paid_at'] ?? null;
+        if (is_numeric($paid_at) && (int) $paid_at > 0) {
+            $order->update_meta_data('spin-paid-at', gmdate('Y-m-d', (int) $paid_at));
+        }
         $order->payment_complete();
-        $order->add_order_note("Payment completed in Spin and notification of payment received");
-
-        header('Content-Type: application/json');
-        echo wp_json_encode(['message' => 'OK', 'order_id' => $order_id]);
-        exit;
+        $order->add_order_note('Pago confirmado por OXXO PAY.');
+        $order->save();
+        self::webhook_response(200, array('message' => 'OK', 'order_id' => $order->get_id()));
     }
+
     /**
-     * @throws ApiException
+     * Ignore stale expiration/cancellation after an order is already paid.
      */
     public static function handleOrderExpiredOrCanceled(OrdersApi $ordersApi, $event)
     {
-        $spin_order = $event['data']['object'];
-        if (!self::validate_reference_id($spin_order)) {
-            http_response_code(400);
-            header('Content-Type: application/json');
-            echo wp_json_encode(['error' => 'Invalid order id']);
-            exit;
+        $spin_order = $event['data']['object'] ?? array();
+        $order = is_array($spin_order) ? self::resolve_webhook_order($spin_order) : false;
+        if (!$order) {
+            self::webhook_response(400, array('error' => 'Order/reference mismatch'));
         }
-        $order_id = $spin_order['metadata']['reference_id'];
-        if (!self::check_order_status($ordersApi, $spin_order['id'], array('expired', 'canceled'))) {
-            http_response_code(400);
-            header('Content-Type: application/json');
-            echo wp_json_encode(['error' => 'Invalid order status', 'order_id' => $order_id]);
-            exit;
+
+        try {
+            $closed = self::check_order_status($ordersApi, $spin_order['id'], array('expired', 'canceled'));
+        } catch (Exception $exception) {
+            self::webhook_response(503, array('error' => 'Payment status unavailable'));
         }
-        $order = new WC_Order($order_id);
-        $order->update_status('cancelled', 'Order expired/cancelled in DigitalFemsa.');
-        header('Content-Type: application/json');
-        echo wp_json_encode(['cancelled' => 'OK', 'order_id' => $order_id]);
-        exit;
+        if (!$closed) {
+            self::webhook_response(409, array('error' => 'Provider status mismatch'));
+        }
+        if ($order->is_paid() || in_array($order->get_status(), array('cancelled', 'refunded'), true)) {
+            self::webhook_response(200, array('message' => 'No change', 'order_id' => $order->get_id()));
+        }
+
+        $order->update_status('cancelled', 'Referencia OXXO PAY vencida o cancelada.');
+        self::webhook_response(200, array('message' => 'Cancelled', 'order_id' => $order->get_id()));
     }
     /**
      * @throws ApiException
