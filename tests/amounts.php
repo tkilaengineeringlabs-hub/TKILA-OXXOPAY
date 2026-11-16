@@ -40,6 +40,9 @@ class WC_Order {
     public static array $mutations = [];
     public function __construct($id) {}
     public function get_id() { return 123; }
+    public function update_meta_data($key, $value) { $GLOBALS['order_meta'][123][$key] = $value; }
+    public function get_meta($key, $single = true) { return $GLOBALS['order_meta'][123][$key] ?? ''; }
+    public function save() { /* Persisted in test memory by update_meta_data(). */ }
     public function get_items($type = '') {
         return $type === 'coupon' ? (self::$fixture['coupons'] ?? []) : (self::$fixture['items'] ?? [
             ['line_subtotal' => '100.00', 'qty' => 1, 'product_id' => 1, 'name' => 'Test'],
