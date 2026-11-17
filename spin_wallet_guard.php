@@ -1,6 +1,7 @@
 <?php
 
 if ( ! defined( 'ABSPATH' ) ) exit;
+require_once(__DIR__ . '/spin_wallet_split.php');
 
 final class Spin_Wallet_Guard
 {
@@ -48,7 +49,8 @@ final class Spin_Wallet_Guard
     {
         if (self::staging_split_allowed()) {
             try {
-                return Tkila_Oxxo_Wallet_Split::plan($order) === null ? false : false;
+                Tkila_Oxxo_Wallet_Split::plan($order);
+                return false;
             } catch (DomainException $exception) {
                 return true;
             }
