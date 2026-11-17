@@ -320,6 +320,12 @@ class Spin_Block_Gateway extends Spin_Plugin
         // Expired references require explicit reconciliation before a new attempt.
         $existing_reference = $order->get_meta('spin-order-id', true);
         if (is_scalar($existing_reference) && (string) $existing_reference !== '') {
+            if ($split !== null &&
+                ((int) $order->get_meta('spin-split-pending-cents', true) !== $split['pending_cents'] ||
+                 (int) $order->get_meta('spin-split-wallet-cents', true) !== $split['wallet_cents'])) {
+                wc_add_notice('El importe pendiente cambió después de crear la referencia OXXO PAY. Verifica el pedido antes de continuar.', 'error');
+                return array('result' => 'failure');
+            }
             $existing_expiration = $order->get_meta('spin-reference-expires-at', true);
             if (is_numeric($existing_expiration) && (int) $existing_expiration > time()) {
                 return array(
