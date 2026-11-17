@@ -24,6 +24,7 @@ function spin_checkout_init_your_gateway()
     if (class_exists('WC_Payment_Gateway'))
     {
         include_once('spin_gateway_helper.php');
+        include_once('spin_wallet_split.php');
         include_once('spin_wallet_guard.php');
         include_once('spin_plugin.php');
         include_once('spin_block_gateway.php');
