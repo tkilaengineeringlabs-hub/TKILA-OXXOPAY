@@ -301,6 +301,21 @@ class Spin_Block_Gateway extends Spin_Plugin
             wc_add_notice('No se pudo validar el importe pendiente para OXXO PAY. No se generó una referencia.', 'error');
             return array('result' => 'failure');
         }
+        // A retry must not create a second remote charge for an existing order.
+        // Expired references require explicit reconciliation before a new attempt.
+        $existing_reference = $order->get_meta('spin-order-id', true);
+        if (is_scalar($existing_reference) && (string) $existing_reference !== '') {
+            $existing_expiration = $order->get_meta('spin-reference-expires-at', true);
+            if (is_numeric($existing_expiration) && (int) $existing_expiration > time()) {
+                return array(
+                    'result' => 'success',
+                    'redirect' => $this->get_return_url($order)
+                );
+            }
+            wc_add_notice('Esta orden ya tiene una referencia OXXO PAY registrada. Verifica su estado antes de crear un nuevo intento de pago.', 'error');
+            return array('result' => 'failure');
+        }
+
         $customer_info = spin_build_customer_info($data);
         $order_metadata = spin_build_order_metadata($data + array(
                 'plugin_spin_version' => $this->version,
@@ -308,13 +323,14 @@ class Spin_Block_Gateway extends Spin_Plugin
                 'payment_method' => $this->GATEWAY_NAME,
             )
         );
+        $expires_at = time() + 48 * 60 * 60;
         $rq = new OrderRequest([
             'currency' => $data['currency'],
             'charges' => [
                 [
                     'payment_method' => [
                         'type' => 'cash',
-                        'expires_at' => time() + 48 * 60 * 60,
+                        'expires_at' => $expires_at,
                     ],
                     'reference_id' => strval($order->get_id()),
                 ]
@@ -332,6 +348,7 @@ class Spin_Block_Gateway extends Spin_Plugin
         try {
             $orderCreated = $this->get_api_instance()->createOrder($rq);
             $order->update_meta_data('spin-order-id', $orderCreated->getId());
+            $order->update_meta_data('spin-reference-expires-at', $expires_at);
             $order->save();
             $order->update_status('pending', __('Pendiente de pago en OXXO PAY (referencia válida por 48 horas)', 'Spin'));
             return array(
