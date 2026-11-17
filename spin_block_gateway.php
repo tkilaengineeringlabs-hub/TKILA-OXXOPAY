@@ -313,6 +313,13 @@ class Spin_Block_Gateway extends Spin_Plugin
                 'source' => 'spin',
                 'order_id' => $order->get_id(),
             ));
+            if (Tkila_Oxxo_Wallet_Split::enabled() &&
+                $order->get_meta('_partial_pay_through_wallet_compleate', true) &&
+                !$order->get_meta('spin-order-id', true)) {
+                // No provider request was made. Cancellation delegates the
+                // wallet reversal to TeraWallet's cancellation hook.
+                $order->update_status('cancelled', 'Cobro combinado rechazado antes de generar referencia OXXO PAY; revisar devolución TeraWallet.');
+            }
             wc_add_notice('No se pudo validar el importe pendiente para OXXO PAY. No se generó una referencia.', 'error');
             return array('result' => 'failure');
         }
@@ -386,7 +393,12 @@ class Spin_Block_Gateway extends Spin_Plugin
             );
         } catch (Exception $e) {
             $description = $e->getMessage();
-            wc_add_notice('Error:' . $description, 'error');
+            if ($split !== null && $order->get_meta('_partial_pay_through_wallet_compleate', true)) {
+                // A network timeout can mean the remote reference exists. Do
+                // not refund wallet or retry silently until reconciled.
+                $order->update_status('on-hold', 'No se pudo confirmar la creación de la referencia OXXO PAY; conciliar con FEMSA antes de reembolsar o reintentar.');
+            }
+            wc_add_notice('No se pudo confirmar la referencia OXXO PAY. Contacta a la tienda antes de reintentar.', 'error');
             $this->spin_mark_as_failed_payment($order);
             WC()->session->reload_checkout = true;
             throw new Exception( $description  );
