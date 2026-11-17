@@ -161,6 +161,18 @@ class Spin_Plugin extends WC_Payment_Gateway
             self::webhook_response(409, array('error' => 'Payment not confirmed'));
         }
 
+        if ($order->get_meta('spin-payment-mode', true) === 'wallet_remainder_collection') {
+            $expected_cents = $order->get_meta('spin-split-pending-cents', true);
+            $charge = $spin_order['charges']['data'][0] ?? array();
+            $collected_cents = $charge['amount'] ?? null;
+            if (!$order->get_meta('_partial_pay_through_wallet_compleate', true) ||
+                !is_numeric($expected_cents) || !is_numeric($collected_cents) ||
+                (int) $expected_cents <= 0 ||
+                (int) $expected_cents !== (int) $collected_cents) {
+                self::webhook_response(409, array('error' => 'Wallet/remote amount reconciliation failed'));
+            }
+        }
+
         if ($order->is_paid()) {
             self::webhook_response(200, array('message' => 'Already paid', 'order_id' => $order->get_id()));
         }
