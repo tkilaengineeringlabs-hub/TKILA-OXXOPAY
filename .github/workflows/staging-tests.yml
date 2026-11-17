@@ -23,6 +23,7 @@ jobs:
       - name: Run plugin unit and guard tests
         run: |
           php tests/split-wallet.php
+          php tests/split-integration.php
           php tests/amounts.php
           php tests/checkout-guard.php
           php tests/webhook-ownership.php
