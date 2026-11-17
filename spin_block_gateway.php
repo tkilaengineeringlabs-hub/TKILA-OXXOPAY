@@ -282,17 +282,31 @@ class Spin_Block_Gateway extends Spin_Plugin
         $order = new WC_Order($order_id);
         try {
             $data = spin_get_request_data($order);
-            $items = $order->get_items();
-            $line_items = spin_build_line_items($items, parent::spin_get_version());
-            $discount_lines = spin_build_discount_lines($data);
-            $shipping_lines = spin_build_shipping_lines($data);
-            $shipping_contact = spin_build_shipping_contact($data);
-            $fees = $order->get_fees();
-            $fees_data = spin_build_get_fees($fees, parent::spin_get_version());
-            $line_items = array_merge($line_items, $fees_data);
-            $taxes = $order->get_taxes();
-            $tax_lines = spin_build_tax_lines($taxes);
-            spin_validate_breakdown($order, $line_items, $discount_lines, $tax_lines, $shipping_lines);
+            $split = Tkila_Oxxo_Wallet_Split::enabled() ? Tkila_Oxxo_Wallet_Split::plan($order) : null;
+
+            if ($split !== null) {
+                // TeraWallet is responsible for the wallet ledger. Its order
+                // processed hook must have completed before creating the cash
+                // collection. Never debit wallet funds in this gateway.
+                if (!$order->get_meta('_partial_pay_through_wallet_compleate', true)) {
+                    throw new DomainException('wallet_debit_not_confirmed');
+                }
+                $line_items = $split['line_items'];
+                $discount_lines = array();
+                $shipping_lines = array();
+                $tax_lines = array();
+                $shipping_contact = array();
+            } else {
+                $items = $order->get_items();
+                $line_items = spin_build_line_items($items, parent::spin_get_version());
+                $discount_lines = spin_build_discount_lines($data);
+                $shipping_lines = spin_build_shipping_lines($data);
+                $shipping_contact = spin_build_shipping_contact($data);
+                $fees_data = spin_build_get_fees($order->get_fees(), parent::spin_get_version());
+                $line_items = array_merge($line_items, $fees_data);
+                $tax_lines = spin_build_tax_lines($order->get_taxes());
+                spin_validate_breakdown($order, $line_items, $discount_lines, $tax_lines, $shipping_lines);
+            }
         } catch (DomainException $exception) {
             wc_get_logger()->error('OXXO PAY amount validation: ' . $exception->getMessage(), array(
                 'source' => 'spin',
@@ -324,6 +338,9 @@ class Spin_Block_Gateway extends Spin_Plugin
             )
         );
         $expires_at = time() + 48 * 60 * 60;
+        if ($split !== null) {
+            $order_metadata = array_merge($order_metadata, $split['metadata']);
+        }
         $rq = new OrderRequest([
             'currency' => $data['currency'],
             'charges' => [
@@ -348,6 +365,11 @@ class Spin_Block_Gateway extends Spin_Plugin
         try {
             $orderCreated = $this->get_api_instance()->createOrder($rq);
             $order->update_meta_data('spin-order-id', $orderCreated->getId());
+            if ($split !== null) {
+                $order->update_meta_data('spin-payment-mode', 'wallet_remainder_collection');
+                $order->update_meta_data('spin-split-pending-cents', $split['pending_cents']);
+                $order->update_meta_data('spin-split-wallet-cents', $split['wallet_cents']);
+            }
             $order->update_meta_data('spin-reference-expires-at', $expires_at);
             $order->save();
             $order->update_status('pending', __('Pendiente de pago en OXXO PAY (referencia válida por 48 horas)', 'Spin'));
