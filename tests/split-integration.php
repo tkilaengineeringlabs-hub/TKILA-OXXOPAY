@@ -37,6 +37,13 @@ verify($retry->process_payment(123)['result'] === 'success', 'split: retry reuse
 verify($retry->api_calls === 0, 'split: retry never creates second provider charge');
 echo "PASS split retry without remote creation\n";
 
+WC_Order::$fixture = ['fees' => [new TestFee('-350.00', '0', true)], 'total' => '650.00'];
+$changed = new TestGateway();
+verify($changed->process_payment(123)['result'] === 'failure', 'split: changed amounts reject old reference');
+verify($changed->api_calls === 0, 'split: changed amounts must not create a charge');
+echo "PASS split changed amounts reject old reference\n";
+WC_Order::$fixture = ['fees' => [$wallet_fee], 'total' => '700.00'];
+
 WC_Order::$mutations = [];
 $GLOBALS['order_meta'] = [];
 $no_debit = new TestGateway();
