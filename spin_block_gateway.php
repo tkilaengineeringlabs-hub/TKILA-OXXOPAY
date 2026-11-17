@@ -207,6 +207,8 @@ class Spin_Block_Gateway extends Spin_Plugin
                 $barcode_url = $charge->getPaymentMethod()->getBarcodeUrl();
                 echo '<p style="font-size: 30px"><strong>' . esc_html__('Referencia', 'Spin') . ':</strong> ' . esc_html($reference) . '</p>';
                 echo '<p><img src="' . esc_url($barcode_url) . '" alt="Código QR" style="border: 2px solid #000; margin: 10px; box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);"></p>';
+                echo '<p>Tu referencia OXXO PAY tiene una vigencia de 48 horas desde su generación.</p>';
+                echo '<p><a class="button" href="' . esc_url('https://www.google.com/maps/search/?api=1&query=OXXO') . '" target="_blank" rel="noopener noreferrer">Encuentra tu OXXO más cercano en Google Maps</a></p>';
                 echo '<p>Se cobrará una comisión adicional al momento de realizar el pago.</p>';
             }
         }
@@ -245,20 +247,9 @@ class Spin_Block_Gateway extends Spin_Plugin
             ),
             'api_key' => array(
                 'type' => 'password',
-                'title' => 'Spin API key',
+                'title' => 'Clave API de OXXO PAY',
                 'description' => __('API Key Producción (Tokens/Llaves Privadas)', 'Spin'),
                 'required' => true
-            ),
-            'order_expiration' => array(
-                'type' => 'number',
-                'title' => __('Vencimiento de las órdenes de pago (Días)', 'Spin'),
-                'description' => __('La cantidad de dīas configuradas en esta opción, corresponde al tiempo en el que la orden estará activa para ser pagada por el cliente desde el momento de su creación.', 'Spin'),
-                'default' => 1,
-                'custom_attributes' => array(
-                    'min' => 1,
-                    'max' => 30,
-                    'step' => 1
-                ),
             ),
             'webhook_url' => array(
                 'type' => 'text',
@@ -276,7 +267,7 @@ class Spin_Block_Gateway extends Spin_Plugin
     {
         $order->add_order_note(
             sprintf(
-                "%s digital femsa Payment Failed",
+                "%s: no se pudo crear la referencia OXXO PAY",
                 $this->GATEWAY_NAME,
             )
         );
@@ -323,7 +314,7 @@ class Spin_Block_Gateway extends Spin_Plugin
                 [
                     'payment_method' => [
                         'type' => 'cash',
-                        'expires_at' => spin_get_expired_at($this->settings['order_expiration']),
+                        'expires_at' => time() + 48 * 60 * 60,
                     ],
                     'reference_id' => strval($order->get_id()),
                 ]
@@ -342,7 +333,7 @@ class Spin_Block_Gateway extends Spin_Plugin
             $orderCreated = $this->get_api_instance()->createOrder($rq);
             $order->update_meta_data('spin-order-id', $orderCreated->getId());
             $order->save();
-            $order->update_status('on-hold', __('Esperando el pago en efectivo de OXXO PAY', 'Spin'));
+            $order->update_status('pending', __('Pendiente de pago en OXXO PAY (referencia válida por 48 horas)', 'Spin'));
             return array(
                 'result' => 'success',
                 'redirect' => $this->get_return_url($order)
