@@ -70,18 +70,23 @@ final class Spin_Wallet_Guard
             return self::wallet_active();
         }
         if (self::staging_split_allowed()) {
-            $negative = 0;
+            $wallet = 0;
+            $pro_discount = 0;
             foreach ($cart->get_fees() as $fee) {
                 if (!isset($fee->amount) || !is_numeric($fee->amount)) {
                     return true;
                 }
                 if ((float) $fee->amount < 0) {
-                    if (($fee->id ?? '') !== '_via_wallet_partial_payment' || ++$negative > 1) {
+                    if (($fee->id ?? '') === '_via_wallet_partial_payment') {
+                        if (++$wallet > 1) { return true; }
+                    } elseif (($fee->id ?? '') === '_wallet_pay_discount') {
+                        if (++$pro_discount > 1) { return true; }
+                    } else {
                         return true;
                     }
                 }
             }
-            return false;
+            return $pro_discount > 0 && $wallet === 0;
         }
         foreach ($cart->get_fees() as $fee) {
             if (!isset($fee->amount) || !is_numeric($fee->amount) || (float) $fee->amount < 0) {
