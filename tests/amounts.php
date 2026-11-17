@@ -186,6 +186,10 @@ foreach ($cases as $name => [$fixture, $expected_error]) {
         verify(payload_total($payload) === spin_amount_validation($order->get_total()), $name . ': wire total');
         verify($payload['charges'][0]['payment_method']['type'] === 'cash', $name . ': cash request');
         verify(WC_Order::$mutations[0][0] === 'pending', $name . ': remains pending payment');
+        verify(($GLOBALS['order_meta'][123]['spin-order-id'] ?? null) === 'ord_test_only', $name . ': remote reference persisted');
+        $retry = new TestGateway();
+        verify($retry->process_payment(123)['result'] === 'success', $name . ': reuse active reference');
+        verify($retry->api_calls === 0, $name . ': retry does not create another remote reference');
         $expiry = $payload['charges'][0]['payment_method']['expires_at'];
         verify(is_numeric($expiry) && abs((int) $expiry - (time() + 48 * 3600)) <= 10, $name . ': reference expires in 48 hours');
     }
