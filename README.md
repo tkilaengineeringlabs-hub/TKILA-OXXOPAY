@@ -23,6 +23,10 @@ Personalizado por **Tkila Intelligence Labs** para WooCommerce. Basado en el plu
 
 ### What the project does
 
+**Tkila OXXO PAY — Tkila Intelligence Labs** permite emitir referencias para pago en efectivo en OXXO. Requisitos de Cannaland: vigencia fija de **48 horas**, pedidos en estado **pendiente de pago** hasta confirmación verificada, y un botón en la página de confirmación para buscar tiendas OXXO en **Google Maps**. Los pedidos confirmados se completan mediante el webhook validado contra el ID remoto guardado.
+
+**Nota:** el saldo parcial de TeraWallet se bloquea preventivamente; aún no se ha habilitado la combinación de billetera + OXXO PAY. Las pruebas automatizadas son simuladas, no validación de pagos reales con FEMSA.
+
 The Tkila OXXO PAY plugin project is designed to function as a connector between WooCommerce and OXXO. This is an Open Source and free plugin. It bundles functionality to process cash payments securely as well as send email notifications to your customers when they complete a successful purchase.
 
 ### Why it's useful
@@ -60,7 +64,7 @@ This plugin has been tested on:
     * Enter the API keys in the designated fields to link your DigitalFemsa account with WooCommerce.
 7. Webhook Configuration:
     * To dynamically manage order statuses for offline payments, set up a webhook in your DigitalFemsa account.
-    * Add the following URL as a webhook in your DigitalFemsa account: `http://tusitio.com/?wc-api=wc_digitalfemsa`. Replace `tusitio.com` with your domain name.
+    * Add the following URL as a webhook in your DigitalFemsa account: `https://tusitio.com/?wc-api=wc_spin`. Replace `tusitio.com` with your domain name.
 
 ### License
 
