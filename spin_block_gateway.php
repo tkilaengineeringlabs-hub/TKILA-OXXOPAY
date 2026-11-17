@@ -10,6 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 
 require_once(__DIR__ . '/vendor/autoload.php');
+require_once(__DIR__ . '/spin_wallet_split.php');
 
 use DigitalFemsa\Api\OrdersApi;
 use DigitalFemsa\ApiException;
