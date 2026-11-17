@@ -51,3 +51,12 @@ verify($no_debit->process_payment(123)['result'] === 'failure', 'split: missing 
 verify($no_debit->api_calls === 0, 'split: missing debit never creates reference');
 verify(WC_Order::$mutations === [], 'split: missing debit leaves state unchanged');
 echo "PASS split missing debit rejects provider call\n";
+
+WC_Order::$fixture = ['fees' => [new TestFee('-300.00', '0', false)], 'total' => '700.00'];
+WC_Order::$mutations = [];
+$GLOBALS['order_meta'] = [123 => ['_partial_pay_through_wallet_compleate' => 'wallet_txn_123']];
+$bad_fee = new TestGateway();
+verify($bad_fee->process_payment(123)['result'] === 'failure', 'split: unknown negative fee rejected');
+verify($bad_fee->api_calls === 0, 'split: validation error never contacts provider');
+verify(WC_Order::$mutations[0][0] === 'cancelled', 'split: pre-provider error cancels order for TeraWallet reversal');
+echo "PASS split pre-provider failure delegates refund to TeraWallet cancellation hook\n";
