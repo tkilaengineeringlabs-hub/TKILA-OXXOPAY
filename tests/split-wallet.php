@@ -32,6 +32,14 @@ $plan = Tkila_Oxxo_Wallet_Split::plan(new SplitOrder('700.00', [new SplitFee('-3
 spin_split_check($plan['pending_cents'] === 70000, 'OXXO remainder is 700 MXN');
 spin_split_check($plan['wallet_cents'] === 30000, 'TeraWallet portion is 300 MXN');
 spin_split_check($plan['gross_cents'] === 100000, 'commercial gross is 1000 MXN');
+$pro = Tkila_Oxxo_Wallet_Split::plan(new SplitOrder('650.00', [
+    new SplitFee('-300.00', '0', $wallet),
+    new SplitFee('-50.00', '0', '_wallet_pay_discount'),
+]));
+spin_split_check($pro['pending_cents'] === 65000, 'Pro discount leaves OXXO remainder at 650 MXN');
+spin_split_check($pro['wallet_cents'] === 30000, 'Pro discount never counts as wallet debit');
+spin_split_check($pro['pro_discount_cents'] === 5000, 'Pro discount tracked separately');
+spin_split_check($pro['before_pro_discount_cents'] === 100000, 'original pre-discount commerce amount tracked');
 spin_split_check($plan['line_items'][0]['unit_price'] === 70000, 'provider collection item only for remainder');
 spin_split_check($plan['metadata']['tkila_payment_mode'] === 'wallet_remainder_collection', 'linked collection metadata');
 
@@ -49,3 +57,5 @@ split_reject('two wallet fees', new SplitOrder('700', [new SplitFee('-100', '0',
 split_reject('zero remainder', new SplitOrder('0', [new SplitFee('-300', '0', $wallet)]));
 split_reject('already paid', new SplitOrder('700', [new SplitFee('-300', '0', $wallet)], 'MXN', true));
 split_reject('unsupported split currency', new SplitOrder('700', [new SplitFee('-300', '0', $wallet)], 'USD'));
+
+split_reject('Pro discount without wallet', new SplitOrder('950', [new SplitFee('-50', '0', '_wallet_pay_discount')]));
