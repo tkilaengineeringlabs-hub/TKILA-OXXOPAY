@@ -185,7 +185,9 @@ foreach ($cases as $name => [$fixture, $expected_error]) {
         $payload = json_decode((string) $gateway->history[0]['request']->getBody(), true);
         verify(payload_total($payload) === spin_amount_validation($order->get_total()), $name . ': wire total');
         verify($payload['charges'][0]['payment_method']['type'] === 'cash', $name . ': cash request');
-        verify(WC_Order::$mutations[0][0] === 'on-hold', $name . ': remains unpaid');
+        verify(WC_Order::$mutations[0][0] === 'pending', $name . ': remains pending payment');
+        $expiry = $payload['charges'][0]['payment_method']['expires_at'];
+        verify(is_numeric($expiry) && abs((int) $expiry - (time() + 48 * 3600)) <= 10, $name . ': reference expires in 48 hours');
     }
     echo 'PASS ', $name, PHP_EOL;
 }
