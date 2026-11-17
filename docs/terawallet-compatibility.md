@@ -70,3 +70,12 @@ php tests/checkout-guard.php
 ```
 
 **No se han hecho pagos de sandbox o reales con FEMSA.** La documentación consultada no prueba que acepte el concepto de recaudación de saldo pendiente de esta forma, ni sus implicaciones contables. Se requiere una prueba de aceptación del proveedor y validación de reversos de TeraWallet antes de considerar este flujo apto para dinero real. No usar la bandera en Cannaland aún.
+
+
+## Verificación con los ZIP reales recibidos (16 nov 2026)
+
+- **TeraWallet 1.7.4** (`woo-wallet/woo-wallet.php`): su descuento parcial se introduce como fee `_via_wallet_partial_payment` (`includes/class-woo-wallet-frontend.php`). En modo de impuesto incluido también descuenta impuesto negativo. El pedido registra el monto de billetera con `get_order_partial_payment_amount()`, sumando fee + impuesto.
+- El débito se ejecuta al crear pedido, por defecto `partial_payment_debit_on = order_created`, bajo bloqueo SQL por pedido y bandera `_partial_pay_through_wallet_compleate` (`includes/class-woo-wallet-wallet.php`). En modo alterno `payment_complete` difiere el débito. La integración de staging solo admite el primero.
+- TeraWallet maneja devolución en estado `cancelled` mediante `process_cancelled_order`; si el crédito al monedero falla, la orden requiere revisión manual y no hay garantía de devolución automática.
+- **TeraWallet Pro 1.1.1** (`woo-wallet-pro/woo-wallet-pro.php`): módulo de descuentos crea otro fee negativo `_wallet_pay_discount` (`modules/discount/class-module-discount-cart.php`). **Es descuento comercial, no dinero debitado de la billetera**. Actualizamos el staging para reconocer un único fee Pro opcional junto al fee core, guardarlo en metadatos separados y cobrar solo el total neto pendiente calculado por WooCommerce. Un Pro fee sin wallet continúa no admitido en esta rama.
+- Quedan sin validar el sitio/activación de módulos de Cannaland y la interacción con otros complementos. Estas versiones pertenecen a los ZIP recibidos, no necesariamente a la instalación del cliente.
