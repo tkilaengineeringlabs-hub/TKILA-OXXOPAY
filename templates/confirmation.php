@@ -33,4 +33,4 @@ $tkila_expiration = wp_date(get_option('date_format') . ' ' . get_option('time_f
   </div>
 </section>
 
-<script defer src="<?php echo esc_url(Spin_Plugin::plugin_url() . '/assets/js/oxxo-ticket.js'); ?>"></script>
+<script defer src="<?php echo esc_url(Spin_Plugin::plugin_url() . '/assets/js/oxxo-ticket.js?ver=1.0.20'); ?>"></script>

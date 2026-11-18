@@ -122,15 +122,20 @@ PASS missing webhook metadata rejected
 PASS non-numeric reference rejected
 PASS zero reference rejected
 PASS overflow reference rejected
-PASS click-only PNG, original fields intact: success
-PASS click-only PNG, original fields intact: canvas
-PASS click-only PNG, original fields intact: cors
-PASS click-only PNG, original fields intact: http
-PASS click-only PNG, original fields intact: decode
-PASS click-only PNG, original fields intact: blob
+PASS no-network PNG; original fields intact: safe
+PASS no-network PNG; original fields intact: tainted
+PASS no-network PNG; original fields intact: blocked
+PASS no-network PNG; original fields intact: missing
+PASS no-network PNG; original fields intact: canvas
+PASS no-network PNG; original fields intact: blob
+PASS v1.0.19 reproduction: image visible, fetch rejected by real browser CORS, no PNG
+PASS real Chromium PNG decode, painted data, download, zero export requests, confirmation intact: tainted
+PASS real Chromium PNG decode, painted data, download, zero export requests, confirmation intact: blocked
+PASS real Chromium PNG decode, painted data, download, zero export requests, confirmation intact: safe
+PASS real Chromium PNG decode, painted data, download, zero export requests, confirmation intact: mobile
 No syntax errors detected in spin_block_gateway.php
 No syntax errors detected in spin_plugin.php
 No syntax errors detected in spin_checkout.php
 No syntax errors detected in templates/confirmation.php
 PASS package round-trip, exact baseline inventory + independent PNG script
-tkila-oxxo-pay-v1.0.19-recovery.zip 150ce7322e6d960e8e4bc412c206ecc34fb286d676b7f33facfa68bc125c3885
+tkila-oxxo-pay-v1.0.20-recovery.zip 79ce8236cc746e1da1859d247eb70a3062b89e5f8f92ac31e0941206ba2f347f

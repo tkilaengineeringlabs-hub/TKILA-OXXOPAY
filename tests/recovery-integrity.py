@@ -11,7 +11,7 @@ with zipfile.ZipFile(baseline) as z:
         expected = z.read(name)
         if name == 'tkila-oxxo-pay/spin_checkout.php':
             assert expected.count(b'Version: 1.0.15') == 1
-            expected = expected.replace(b'Version: 1.0.15', b'Version: 1.0.19', 1)
+            expected = expected.replace(b'Version: 1.0.15', b'Version: 1.0.20', 1)
         assert hashlib.sha256(path.read_bytes()).digest() == hashlib.sha256(expected).digest(), f'Unauthorized PHP difference: {path}'
     for name in ['assets/js/oxxo-confirmation.js', 'spin_wallet_guard.php', 'spin_wallet_split.php']:
         assert (root/name).read_bytes() == z.read('tkila-oxxo-pay/'+name), name
