@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@zxing/library": "0.21.3",
+    "esbuild": "0.25.12",
+    "html2canvas": "1.4.1",
+    "jsbarcode": "3.12.3"
+  },
+  "name": "tkila-ticket-export-build",
+  "private": true,
+  "scripts": {
+    "build": "node ../../../scripts/build-ticket.cjs"
+  }
+}

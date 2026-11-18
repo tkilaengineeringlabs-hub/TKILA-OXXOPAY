@@ -122,20 +122,23 @@ PASS missing webhook metadata rejected
 PASS non-numeric reference rejected
 PASS zero reference rejected
 PASS overflow reference rejected
-PASS no-network PNG; original fields intact: safe
-PASS no-network PNG; original fields intact: tainted
-PASS no-network PNG; original fields intact: blocked
-PASS no-network PNG; original fields intact: missing
-PASS no-network PNG; original fields intact: canvas
-PASS no-network PNG; original fields intact: blob
-PASS v1.0.19 reproduction: image visible, fetch rejected by real browser CORS, no PNG
-PASS real Chromium PNG decode, painted data, download, zero export requests, confirmation intact: tainted
-PASS real Chromium PNG decode, painted data, download, zero export requests, confirmation intact: blocked
-PASS real Chromium PNG decode, painted data, download, zero export requests, confirmation intact: safe
-PASS real Chromium PNG decode, painted data, download, zero export requests, confirmation intact: mobile
+PASS reproducible exporter bundle with pinned local libraries, CSS and logos
+PASS provider-issued reference + image: SHA-256 and independent CODE_128 identification
+PASS official FEMSA sample independently decodes as CODE_128 / 84000045432316
+PASS local generated symbol matches provider example bar-for-bar
+PASS real high-resolution PNG, exact CODE_128 decode, embedded logos, no controls/countdown: desktop
+PASS real high-resolution PNG, exact CODE_128 decode, embedded logos, no controls/countdown: mobile
+PASS real high-resolution PNG, exact CODE_128 decode, embedded logos, no controls/countdown: blocked
+PASS real high-resolution PNG, exact CODE_128 decode, embedded logos, no controls/countdown: leading-zero
+PASS real high-resolution PNG, exact CODE_128 decode, embedded logos, no controls/countdown: long-reference
+PASS invalid/incomplete PNG blocked before download: invalid
+PASS invalid/incomplete PNG blocked before download: no-canvas
+PASS invalid/incomplete PNG blocked before download: png-failure
+PASS invalid/incomplete PNG blocked before download: corrupt-png
+PASS invalid/incomplete PNG blocked before download: logo-failure
 No syntax errors detected in spin_block_gateway.php
 No syntax errors detected in spin_plugin.php
 No syntax errors detected in spin_checkout.php
 No syntax errors detected in templates/confirmation.php
 PASS package round-trip, exact baseline inventory + independent PNG script
-tkila-oxxo-pay-v1.0.20-recovery.zip 79ce8236cc746e1da1859d247eb70a3062b89e5f8f92ac31e0941206ba2f347f
+tkila-oxxo-pay-v1.0.21-recovery.zip 16ba276e6487cd03a0e225ef065c00ff5eab0a09dc25fe5353c484d25f1a8827

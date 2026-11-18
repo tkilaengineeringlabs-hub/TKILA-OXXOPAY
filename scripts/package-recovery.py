@@ -6,12 +6,13 @@ os.chdir(root)
 subprocess.run(['python3','tests/recovery-integrity.py'],check=True)
 for test in ['environment','confirmation-render','amounts','checkout-guard','split-wallet','split-integration','webhook-ownership']:
     subprocess.run(['php',f'tests/{test}.php'],check=True)
+subprocess.run(['node','scripts/build-ticket.cjs','--check'],check=True)
 subprocess.run(['node','--check','assets/js/oxxo-ticket.js'],check=True)
 subprocess.run(['node','tests/png-download.cjs'],check=True)
 subprocess.run(['node','tests/png-browser.cjs'],check=True)
 for file in ['spin_block_gateway.php','spin_plugin.php','spin_checkout.php','templates/confirmation.php']:
     subprocess.run(['php','-l',file],check=True)
-version = '1.0.20'
+version = '1.0.21'
 allowed = {'VERSION','templates/confirmation.php','assets/css/oxxo-confirmation.css','assets/js/oxxo-ticket.js'}
 with zipfile.ZipFile('tests/fixtures/v1.0.15.zip') as baseline:
     files = {n: baseline.read(n) for n in baseline.namelist() if not n.endswith('/')}
@@ -22,12 +23,13 @@ for name in list(files):
     if content != files[name]:
         if relative == 'spin_checkout.php':
             assert files[name].count(b'Version: 1.0.15') == 1
-            assert content == files[name].replace(b'Version: 1.0.15', b'Version: 1.0.20', 1), 'Unauthorized checkout logic change'
+            assert content == files[name].replace(b'Version: 1.0.15', b'Version: 1.0.21', 1), 'Unauthorized checkout logic change'
         else:
             assert relative in allowed, f'Unauthorized package change: {relative}'
         files[name] = content
 files['tkila-oxxo-pay/VERSION'] = (version+'\n').encode()
 files['tkila-oxxo-pay/assets/js/oxxo-ticket.js'] = pathlib.Path('assets/js/oxxo-ticket.js').read_bytes()
+files['tkila-oxxo-pay/assets/js/oxxo-ticket.LICENSE.txt'] = pathlib.Path('assets/js/oxxo-ticket.LICENSE.txt').read_bytes()
 out = pathlib.Path(f'tkila-oxxo-pay-v{version}-recovery.zip')
 temp = out.with_suffix('.zip.tmp')
 try:
@@ -39,11 +41,11 @@ try:
         for name in baseline.namelist():
             if name.endswith('/'):continue
             if name == 'tkila-oxxo-pay/spin_checkout.php':
-                assert package.read(name) == baseline.read(name).replace(b'Version: 1.0.15', b'Version: 1.0.20', 1)
+                assert package.read(name) == baseline.read(name).replace(b'Version: 1.0.15', b'Version: 1.0.21', 1)
             elif name.removeprefix('tkila-oxxo-pay/') not in allowed:
                 assert package.read(name) == baseline.read(name), name
         assert package.read('tkila-oxxo-pay/VERSION').decode().strip() == version
-        assert b'Version: 1.0.20' in package.read('tkila-oxxo-pay/spin_checkout.php')
+        assert b'Version: 1.0.21' in package.read('tkila-oxxo-pay/spin_checkout.php')
     pathlib.Path('VERSION').write_text(version+'\n')
     temp.replace(out)
 except BaseException:
