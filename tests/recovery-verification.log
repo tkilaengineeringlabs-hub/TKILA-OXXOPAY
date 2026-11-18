@@ -1,0 +1,136 @@
+PASS SHA-256: baseline ZIP and 313 immutable PHP files; original JS and wallet preserved
+PASS sandbox selects documented Direct API host
+PASS sandbox preserves only supplied sandbox credential
+PASS production uses documented Direct API host
+PASS unknown mode retains shared host without changing key mode
+PASS sandbox rejects live-mode response
+PASS sandbox accepts test-mode response
+PASS sandbox rejects missing or indeterminate livemode
+PASS pending OXXO order renders reference, barcode, amount, expiry and actions
+PASS paid OXXO order retains ticket without Pagado badge
+PASS normal
+PASS coupon
+PASS wallet partial blocked
+PASS wallet and coupon blocked
+PASS multiple fees
+PASS shipping rounding
+PASS tax and shipping
+PASS coupon tax
+PASS quantity remainder
+PASS zero remaining
+PASS wallet covers all blocked
+PASS mismatch
+PASS external total reduction
+PASS negative taxes
+PASS fractional quantity
+PASS already paid
+PASS invalid total
+PASS wallet marked persisted fee
+PASS wallet tiny negative fee
+PASS wallet taxed coupon shipping fees quantities
+PASS combined without wallet
+PASS monetary conversion and fee count
+PASS retries wallet partial blocked
+PASS retries wallet and coupon blocked
+PASS retries wallet covers all blocked
+PASS retries wallet tiny negative fee
+PASS retries wallet taxed coupon shipping fees quantities
+PASS pinned upstream source order contracts
+PASS classic fee before order/debit
+PASS blocks fee before order/debit
+PASS classic session before order/debit
+PASS blocks session before order/debit
+PASS classic auto before order/debit
+PASS blocks auto before order/debit
+PASS classic missing_cart before order/debit
+PASS blocks missing_cart before order/debit
+PASS classic missing_session before order/debit
+PASS blocks missing_session before order/debit
+PASS classic subcent before order/debit
+PASS blocks subcent before order/debit
+PASS classic cod unaffected
+PASS classic woo_wallet unaffected
+PASS classic spin unaffected
+PASS blocks cod unaffected
+PASS blocks woo_wallet unaffected
+PASS blocks spin unaffected
+PASS Blocks uses loaded cart, not preflight cart
+PASS conservative PATCH fallback
+PASS conservative GET fallback
+PASS unsupported API fallback
+PASS existing order and pre-debit barrier fee
+PASS existing order and pre-debit barrier tax
+PASS existing order and pre-debit barrier debited
+PASS omitted method and REST context cleanup
+PASS OXXO remainder is 700 MXN
+PASS TeraWallet portion is 300 MXN
+PASS commercial gross is 1000 MXN
+PASS Pro discount leaves OXXO remainder at 650 MXN
+PASS Pro discount never counts as wallet debit
+PASS Pro discount tracked separately
+PASS original pre-discount commerce amount tracked
+PASS provider collection item only for remainder
+PASS linked collection metadata
+PASS wallet tax component included exactly once
+PASS nonwallet order unaffected
+PASS unknown negative fee: unsupported_negative_fee
+PASS two wallet fees: unsupported_negative_fee
+PASS zero remainder: no_pending_payment
+PASS already paid: no_pending_payment
+PASS unsupported split currency: unsupported_split_currency
+PASS Pro discount without wallet: pro_discount_without_wallet_unsupported
+PASS normal
+PASS coupon
+PASS wallet partial blocked
+PASS wallet and coupon blocked
+PASS multiple fees
+PASS shipping rounding
+PASS tax and shipping
+PASS coupon tax
+PASS quantity remainder
+PASS zero remaining
+PASS wallet covers all blocked
+PASS mismatch
+PASS external total reduction
+PASS negative taxes
+PASS fractional quantity
+PASS already paid
+PASS invalid total
+PASS wallet marked persisted fee
+PASS wallet tiny negative fee
+PASS wallet taxed coupon shipping fees quantities
+PASS combined without wallet
+PASS monetary conversion and fee count
+PASS retries wallet partial blocked
+PASS retries wallet and coupon blocked
+PASS retries wallet covers all blocked
+PASS retries wallet tiny negative fee
+PASS retries wallet taxed coupon shipping fees quantities
+PASS split full request: 1000 commercial, 300 wallet, 700 OXXO
+PASS split retry without remote creation
+PASS split changed amounts reject old reference
+PASS split missing debit rejects provider call
+PASS split pre-provider failure delegates refund to TeraWallet cancellation hook
+PASS matching OXXO order
+PASS missing remote id rejected
+PASS mismatched remote id rejected
+PASS unrelated gateway rejected
+PASS missing local reference rejected
+PASS nonexistent order rejected
+PASS wrong webhook method rejected
+PASS missing webhook metadata rejected
+PASS non-numeric reference rejected
+PASS zero reference rejected
+PASS overflow reference rejected
+PASS click-only PNG, original fields intact: success
+PASS click-only PNG, original fields intact: canvas
+PASS click-only PNG, original fields intact: cors
+PASS click-only PNG, original fields intact: http
+PASS click-only PNG, original fields intact: decode
+PASS click-only PNG, original fields intact: blob
+No syntax errors detected in spin_block_gateway.php
+No syntax errors detected in spin_plugin.php
+No syntax errors detected in spin_checkout.php
+No syntax errors detected in templates/confirmation.php
+PASS package round-trip, exact baseline inventory + independent PNG script
+tkila-oxxo-pay-v1.0.19-recovery.zip 1de1566e5a4404acd3c94bd6d673a2fd3bf375c7e6a8014d88ad4ef90772a961

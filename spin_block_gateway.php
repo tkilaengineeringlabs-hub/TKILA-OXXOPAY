@@ -69,6 +69,7 @@ class Spin_Block_Gateway extends Spin_Plugin
 
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
         add_action('woocommerce_thankyou_' . $this->id, array($this, 'spin_thankyou_page'));
+        add_action('woocommerce_view_order', array($this, 'spin_thankyou_page'));
         add_action('woocommerce_api_wc_spin', [$this, 'check_for_webhook']);
 
         if (!$this->spin_validate_currency()) {
@@ -79,7 +80,7 @@ class Spin_Block_Gateway extends Spin_Plugin
             $this->enabled = false;
         }
         if ($this->enabled) {
-            self::create_webhook( $this->api_key, $this->webhook_url);
+            self::create_webhook( $this->api_key, $this->webhook_url, $this->settings['environment'] ?? 'test');
         }
 
     }
@@ -143,6 +144,9 @@ class Spin_Block_Gateway extends Spin_Plugin
 
     public function get_api_instance(): OrdersApi
     {
+        if (empty($this->settings['api_key'])) {
+            throw new RuntimeException('Digital FEMSA API key is required.');
+        }
         $integrationParams = [
             'integration_type' => 'plugin',
             'integration_name' => 'spin-woocommerce',
@@ -153,7 +157,7 @@ class Spin_Block_Gateway extends Spin_Plugin
 
         return new OrdersApi(
             null,
-            self::get_spin_instance($this->settings['api_key']),
+            self::get_spin_instance($this->settings['api_key'], $this->settings['environment'] ?? 'test'),
             new class($integrationParams) extends \DigitalFemsa\HeaderSelector {
                 private $integrationParams;
                 public function __construct(array $integrationParams) { $this->integrationParams = $integrationParams; }
@@ -193,25 +197,59 @@ class Spin_Block_Gateway extends Spin_Plugin
      */
     function spin_thankyou_page($order_id)
     {
-        $order = new WC_Order($order_id);
+        static $rendered_orders = array();
+        $id = absint($order_id);
+        if (!$id || isset($rendered_orders[$id])) return;
+        $rendered_orders[$id] = true;
+        $order = wc_get_order($id);
+        if (!$order || $order->get_payment_method() !== $this->id) return;
         $spin_order_id = $order->get_meta('spin-order-id', true);
+        if (!is_string($spin_order_id) || $spin_order_id === '' || empty($this->settings['api_key'])) return;
 
-        if (empty($spin_order_id)) {
-            return;
-        }
-        $spin_order = $this->get_api_instance()->getOrderById($spin_order_id);
-
-        foreach ($spin_order->getCharges()->getData() as $charge) {
-            $payment_method = $charge->getPaymentMethod()->getObject();
-            if ($payment_method == 'cash_payment') {
-                $reference = $charge->getPaymentMethod()->getReference();
-                $barcode_url = $charge->getPaymentMethod()->getBarcodeUrl();
-                echo '<p style="font-size: 30px"><strong>' . esc_html__('Referencia', 'Spin') . ':</strong> ' . esc_html($reference) . '</p>';
-                echo '<p><img src="' . esc_url($barcode_url) . '" alt="Código QR" style="border: 2px solid #000; margin: 10px; box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);"></p>';
-                echo '<p>Tu referencia OXXO PAY tiene una vigencia de 48 horas desde su generación.</p>';
-                echo '<p><a class="button" href="' . esc_url('https://www.google.com/maps/search/?api=1&query=OXXO') . '" target="_blank" rel="noopener noreferrer">Encuentra tu OXXO más cercano en Google Maps</a></p>';
-                echo '<p>Se cobrará una comisión adicional al momento de realizar el pago.</p>';
+        try {
+            $remote = $this->get_api_instance()->getOrderById($spin_order_id);
+            if (!Spin_Plugin::is_environment_response_allowed($remote, $this->settings['environment'] ?? 'test')) {
+                wc_get_logger()->error('OXXO PAY confirmation environment mismatch.', array('source' => 'spin', 'order_id' => $id));
+                return;
             }
+            $charges = $remote->getCharges() ? $remote->getCharges()->getData() : array();
+            $cash_charges = array();
+            foreach ((array) $charges as $charge) {
+                if ($charge && $charge->getPaymentMethod() && $charge->getPaymentMethod()->getObject() === 'cash_payment') $cash_charges[] = $charge;
+            }
+            if (count($cash_charges) !== 1) {
+                wc_get_logger()->error('OXXO PAY confirmation charge count anomaly.', array('source' => 'spin', 'order_id' => $id, 'charge_count' => count($cash_charges)));
+                return;
+            }
+            $charge = $cash_charges[0];
+            $pm = $charge->getPaymentMethod();
+            $reference = $pm->getReference();
+            $barcode_url = $pm->getBarcodeUrl();
+            $expires_at = $pm->getExpiresAt();
+            $amount_cents = $charge->getAmount();
+            $status = $remote->getPaymentStatus();
+            if (!is_string($reference) || $reference === '' || !is_numeric($amount_cents) || (int) $amount_cents <= 0 || !is_numeric($expires_at) || (int) $expires_at <= 0) {
+                wc_get_logger()->error('OXXO PAY confirmation response incomplete.', array('source' => 'spin', 'order_id' => $id));
+                return;
+            }
+            $split_expected = $order->get_meta('spin-split-pending-cents', true);
+            $expected_cents = is_numeric($split_expected) ? (int) $split_expected : (int) round((float) $order->get_total() * 100, 0, PHP_ROUND_HALF_UP);
+            if ($expected_cents !== (int) $amount_cents) {
+                wc_get_logger()->error('OXXO PAY confirmation amount discrepancy.', array('source' => 'spin', 'order_id' => $id, 'expected_cents' => $expected_cents, 'provider_cents' => (int) $amount_cents));
+                return;
+            }
+            $data = array(
+                'order_number' => $order->get_order_number(), 'reference' => $reference,
+                'barcode_url' => is_string($barcode_url) ? $barcode_url : '',
+                'amount' => number_format(((int) $amount_cents) / 100, 2, '.', ','),
+                'expires_at' => (int) $expires_at, 'status' => is_string($status) ? $status : '',
+                'paid' => $order->is_paid() || in_array($status, array('paid', 'partially_refunded'), true),
+            );
+            wp_enqueue_style('tkila-oxxo-confirmation', plugins_url('assets/css/oxxo-confirmation.css', __FILE__), array(), $this->version);
+            wp_enqueue_script('tkila-oxxo-confirmation', plugins_url('assets/js/oxxo-confirmation.js', __FILE__), array(), $this->version, true);
+            include __DIR__ . '/templates/confirmation.php';
+        } catch (Exception $exception) {
+            wc_get_logger()->error('OXXO PAY confirmation could not be loaded.', array('source' => 'spin', 'order_id' => $id));
         }
     }
 
@@ -249,8 +287,15 @@ class Spin_Block_Gateway extends Spin_Plugin
             'api_key' => array(
                 'type' => 'password',
                 'title' => 'Clave API de OXXO PAY',
-                'description' => __('API Key Producción (Tokens/Llaves Privadas)', 'Spin'),
+                'description' => __('Ingresa la clave privada correspondiente al entorno seleccionado.', 'Spin'),
                 'required' => true
+            ),
+            'environment' => array(
+                'type' => 'select',
+                'title' => __('Entorno Digital FEMSA', 'Spin'),
+                'description' => __('Pruebas usa exclusivamente llaves sandbox. Producción requiere cambiarlo explícitamente.', 'Spin'),
+                'default' => 'test',
+                'options' => array('test' => __('Pruebas (Sandbox)', 'Spin'), 'production' => __('Producción', 'Spin')),
             ),
             'webhook_url' => array(
                 'type' => 'text',
@@ -344,6 +389,11 @@ class Spin_Block_Gateway extends Spin_Plugin
             return array('result' => 'failure');
         }
 
+        if (empty($this->settings['api_key'])) {
+            wc_add_notice('Configura la clave API del entorno seleccionado para OXXO PAY.', 'error');
+            return array('result' => 'failure');
+        }
+
         $customer_info = spin_build_customer_info($data);
         $order_metadata = spin_build_order_metadata($data + array(
                 'plugin_spin_version' => $this->version,
@@ -378,6 +428,9 @@ class Spin_Block_Gateway extends Spin_Plugin
         }
         try {
             $orderCreated = $this->get_api_instance()->createOrder($rq);
+            if (!self::is_environment_response_allowed($orderCreated, $this->settings['environment'] ?? 'test')) {
+                throw new RuntimeException('Digital FEMSA returned a live-mode response while sandbox is selected.');
+            }
             $order->update_meta_data('spin-order-id', $orderCreated->getId());
             if ($split !== null) {
                 $order->update_meta_data('spin-payment-mode', 'wallet_remainder_collection');

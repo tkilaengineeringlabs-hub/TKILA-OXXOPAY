@@ -2,6 +2,8 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
+require_once __DIR__ . '/version.php';
+
 /*
 * Title   : Spin for WooCommerce
 * Author  : DigitalFemsa.io
@@ -16,7 +18,7 @@ use DigitalFemsa\ApiException;
 
 class Spin_Plugin extends WC_Payment_Gateway
 {
-	public $version  = "1.0.12";
+	public $version  = TKILA_OXXO_PAY_VERSION;
 
     public $name = "Tkila OXXO PAY";
 
@@ -49,22 +51,35 @@ class Spin_Plugin extends WC_Payment_Gateway
         return trailingslashit( plugin_dir_path( __FILE__ ) );
     }
 
-    public static function get_spin_instance($apikey)
+    public static function get_spin_instance($apikey, $environment = 'test')
     {
+        // Direct API uses one base URL; the key selects sandbox or production.
         return Configuration::getDefaultConfiguration()
+            ->setHost('https://api.digitalfemsa.io')
             ->setAccessToken($apikey);
+    }
+
+    public static function is_environment_response_allowed($response, $environment): bool
+    {
+        if ($environment !== 'production' && is_object($response) && method_exists($response, 'getLivemode')) {
+            return $response->getLivemode() === false;
+        }
+        if ($environment !== 'production' && is_array($response)) {
+            return array_key_exists('livemode', $response) && $response['livemode'] === false;
+        }
+        return true;
     }
 
     /**
      * @throws Exception
      */
-    public static function create_webhook(?string $apikey, ?string $webhook_url): bool
+    public static function create_webhook(?string $apikey, ?string $webhook_url, $environment = 'test'): bool
     {
-        if (is_null($webhook_url)){
+        if (empty($apikey) || is_null($webhook_url)){
             return false;
         }
         try {
-            $api = new WebhooksApi(null, self::get_spin_instance($apikey));
+            $api = new WebhooksApi(null, self::get_spin_instance($apikey, $environment));
             $webhooks = $api->getWebhooks("es", null,3,null, $webhook_url);
             if (empty($webhooks->getData())) {
                 $webhook = new WebhookRequest();
@@ -74,7 +89,7 @@ class Spin_Plugin extends WC_Payment_Gateway
             return true;
         }
         catch (Exception $e) {
-            error_log($e->getMessage());
+            error_log('Digital FEMSA webhook setup failed.');
             return false;
         }
     }
@@ -221,9 +236,12 @@ class Spin_Plugin extends WC_Payment_Gateway
     /**
      * @throws ApiException
      */
-    public static function check_order_status(OrdersApi $ordersApi, string $spin_order_id, array $statuses): bool
+    public static function check_order_status(OrdersApi $ordersApi, string $spin_order_id, array $statuses, $environment = 'test'): bool
     {
         $spin_order_api = $ordersApi->getOrderById($spin_order_id);
+        if (!self::is_environment_response_allowed($spin_order_api, $environment)) {
+            return false;
+        }
 
         return in_array($spin_order_api->getPaymentStatus(), $statuses);
     }

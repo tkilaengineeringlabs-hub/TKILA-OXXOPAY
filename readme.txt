@@ -1,10 +1,10 @@
 === Tkila OXXO PAY ===
 Contributors: fcarrero, perafan18, urielperezb
 Tags: free, cash, mexico, payment gateway
-Requires at least:1.0.12
+Requires at least: 5.8
 Tested up to: 6.8.5
 Requires PHP: 8.1
-Stable tag:1.0.12
+Stable tag: 1.0.13
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
