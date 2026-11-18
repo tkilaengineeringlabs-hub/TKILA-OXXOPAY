@@ -8,7 +8,7 @@ require_once __DIR__ . '/version.php';
 Plugin Name: Tkila OXXO PAY
 Plugin URI: https://github.com/tkilaengineeringlabs-hub/TKILA-OXXOPAY
 Description: Pasarela OXXO PAY para WooCommerce, personalizada por Tkila Intelligence Labs.
-Version: 1.0.15
+Version: 1.0.19
 Author: Tkila Intelligence Labs
 Author URI: https://github.com/tkilaengineeringlabs-hub
 License: GNU General Public License v3.0

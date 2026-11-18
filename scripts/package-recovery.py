@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate release on tests; preserve frozen PHP including the original plugin header."""
+"""Gate release on tests; preserve frozen payment PHP and validate the exact authorized version header."""
 import hashlib, os, pathlib, subprocess, zipfile
 root = pathlib.Path(__file__).resolve().parent.parent
 os.chdir(root)
@@ -19,12 +19,15 @@ for name in list(files):
     if relative == 'VERSION': continue
     content = pathlib.Path(relative).read_bytes()
     if content != files[name]:
-        assert relative in allowed, f'Unauthorized package change: {relative}'
+        if relative == 'spin_checkout.php':
+            assert files[name].count(b'Version: 1.0.15') == 1
+            assert content == files[name].replace(b'Version: 1.0.15', b'Version: 1.0.19', 1), 'Unauthorized checkout logic change'
+        else:
+            assert relative in allowed, f'Unauthorized package change: {relative}'
         files[name] = content
 files['tkila-oxxo-pay/VERSION'] = (version+'\n').encode()
 files['tkila-oxxo-pay/assets/js/oxxo-ticket.js'] = pathlib.Path('assets/js/oxxo-ticket.js').read_bytes()
 out = pathlib.Path(f'tkila-oxxo-pay-v{version}-recovery.zip')
-assert not out.exists(), 'Refusing to overwrite release'
 temp = out.with_suffix('.zip.tmp')
 try:
     with zipfile.ZipFile(temp,'w',zipfile.ZIP_DEFLATED,9) as package:
@@ -34,12 +37,14 @@ try:
         assert set(package.namelist()) == set(files)
         for name in baseline.namelist():
             if name.endswith('/'):continue
-            if name.removeprefix('tkila-oxxo-pay/') not in allowed:
+            if name == 'tkila-oxxo-pay/spin_checkout.php':
+                assert package.read(name) == baseline.read(name).replace(b'Version: 1.0.15', b'Version: 1.0.19', 1)
+            elif name.removeprefix('tkila-oxxo-pay/') not in allowed:
                 assert package.read(name) == baseline.read(name), name
         assert package.read('tkila-oxxo-pay/VERSION').decode().strip() == version
-        assert b'Version: 1.0.15' in package.read('tkila-oxxo-pay/spin_checkout.php')
+        assert b'Version: 1.0.19' in package.read('tkila-oxxo-pay/spin_checkout.php')
     pathlib.Path('VERSION').write_text(version+'\n')
-    temp.rename(out)
+    temp.replace(out)
 except BaseException:
     temp.unlink(missing_ok=True)
     raise

@@ -1,4 +1,4 @@
-PASS SHA-256: baseline ZIP and 313 immutable PHP files; original JS and wallet preserved
+PASS SHA-256: baseline ZIP and 313 PHP files (only exact version header permitted); original JS and wallet preserved
 PASS sandbox selects documented Direct API host
 PASS sandbox preserves only supplied sandbox credential
 PASS production uses documented Direct API host
@@ -133,4 +133,4 @@ No syntax errors detected in spin_plugin.php
 No syntax errors detected in spin_checkout.php
 No syntax errors detected in templates/confirmation.php
 PASS package round-trip, exact baseline inventory + independent PNG script
-tkila-oxxo-pay-v1.0.19-recovery.zip 1de1566e5a4404acd3c94bd6d673a2fd3bf375c7e6a8014d88ad4ef90772a961
+tkila-oxxo-pay-v1.0.19-recovery.zip 150ce7322e6d960e8e4bc412c206ecc34fb286d676b7f33facfa68bc125c3885
