@@ -5,3 +5,17 @@ node_modules/
 build/
 vendor/
 *.zip
+
+# Local configuration and generated verification output
+.env
+.env.*
+*.log
+*.tmp
+__pycache__/
+tests/artifacts/
+
+# Private local configuration
+.aws/
+.codex/
+*.pem
+*.key
