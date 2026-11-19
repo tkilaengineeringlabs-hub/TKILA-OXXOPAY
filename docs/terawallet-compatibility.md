@@ -47,3 +47,35 @@ Mientras no se confirme una alternativa, la opción operativa es pagar el pedido
 - Probar impuestos del wallet, cupones normales/cashback, cantidades, envío y fees, con igualdad exacta de centavos en el payload y la referencia devuelta.
 - Validar la representación acordada en sandbox FEMSA, junto con eventos de pago, expiración y cancelación. Si exige cambiar webhooks, será una fase separada autorizada.
 - Probar fallos de transporte y concurrencia. La arquitectura actual no ofrece idempotencia general de creación de referencias; las pruebas añadidas cubren únicamente reintentos rechazados antes del envío.
+
+
+## Prototipo interno Tkila — rama de staging (16 nov 2026)
+
+Implementado en `feature/terawallet-split-staging`. **No está incorporado a `main` ni activado en producción**. Se enciende exclusivamente con `define('TKILA_OXXO_WALLET_SPLIT_STAGING', true);` en la configuración de un entorno de pruebas.
+
+La estrategia no declara el saldo TeraWallet como descuento ni falsea líneas fiscales. Crea una **orden de recaudación de saldo pendiente** en FEMSA: un solo concepto `Saldo pendiente pedido WooCommerce #ID`, con importe igual al total pendiente *ya calculado* por WooCommerce. El valor comercial total original permanece en WooCommerce; los metadatos de la orden de recaudación guardan explícitamente el importe aplicado con wallet y el total comercial para conciliación. Esta recaudación no sustituye una factura o desglose fiscal del pedido original.
+
+Ejemplo: pedido comercial $1,000, TeraWallet registra fee de -$300 (incluyendo su impuesto, si aplica), WooCommerce deja total de $700. El request de recaudación de OXXO utiliza un solo line item de **70,000 centavos**. Los $300 no se envían como cupón ni se vuelven a restar. Se valida que el fee negativo tenga el identificador de TeraWallet, que no haya otros ajustes negativos, que el total esté pendiente y la moneda sea MXN.
+
+TeraWallet conserva la autoridad del saldo y el débito de la billetera. El flujo de pruebas exige explícitamente que su configuración `partial_payment_debit_on` sea `order_created`; el gateway espera la marca `_partial_pay_through_wallet_compleate` antes de solicitar una referencia. Si el pedido se cancela, la versión del código de TeraWallet revisada tiene un manejador de cancelación que intenta el reembolso de su parte. **No hemos confirmado aún esa versión ni configuración en Cannaland**, por lo que no se debe habilitar en producción.
+
+El webhook exige la misma referencia remota que el pedido, estado `paid` confirmado por FEMSA, coincidencia exacta de centavos OXXO y marca de débito TeraWallet antes de completar un pedido combinado. Se reutiliza la referencia existente en reintentos normales. Los reintentos concurrentes y las respuestas ambiguas de la API requieren más trabajo para garantizar idempotencia integral.
+
+Para probar en local, después de instalar dependencias y traer esta rama:
+
+```sh
+php tests/split-wallet.php
+php tests/split-integration.php
+php tests/checkout-guard.php
+```
+
+**No se han hecho pagos de sandbox o reales con FEMSA.** La documentación consultada no prueba que acepte el concepto de recaudación de saldo pendiente de esta forma, ni sus implicaciones contables. Se requiere una prueba de aceptación del proveedor y validación de reversos de TeraWallet antes de considerar este flujo apto para dinero real. No usar la bandera en Cannaland aún.
+
+
+## Verificación con los ZIP reales recibidos (16 nov 2026)
+
+- **TeraWallet 1.7.4** (`woo-wallet/woo-wallet.php`): su descuento parcial se introduce como fee `_via_wallet_partial_payment` (`includes/class-woo-wallet-frontend.php`). En modo de impuesto incluido también descuenta impuesto negativo. El pedido registra el monto de billetera con `get_order_partial_payment_amount()`, sumando fee + impuesto.
+- El débito se ejecuta al crear pedido, por defecto `partial_payment_debit_on = order_created`, bajo bloqueo SQL por pedido y bandera `_partial_pay_through_wallet_compleate` (`includes/class-woo-wallet-wallet.php`). En modo alterno `payment_complete` difiere el débito. La integración de staging solo admite el primero.
+- TeraWallet maneja devolución en estado `cancelled` mediante `process_cancelled_order`; si el crédito al monedero falla, la orden requiere revisión manual y no hay garantía de devolución automática.
+- **TeraWallet Pro 1.1.1** (`woo-wallet-pro/woo-wallet-pro.php`): módulo de descuentos crea otro fee negativo `_wallet_pay_discount` (`modules/discount/class-module-discount-cart.php`). **Es descuento comercial, no dinero debitado de la billetera**. Actualizamos el staging para reconocer un único fee Pro opcional junto al fee core, guardarlo en metadatos separados y cobrar solo el total neto pendiente calculado por WooCommerce. Un Pro fee sin wallet continúa no admitido en esta rama.
+- Quedan sin validar el sitio/activación de módulos de Cannaland y la interacción con otros complementos. Estas versiones pertenecen a los ZIP recibidos, no necesariamente a la instalación del cliente.

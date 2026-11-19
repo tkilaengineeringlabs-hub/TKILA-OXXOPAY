@@ -13,6 +13,8 @@ function __($message, $domain) { return $message; }
 function update_post_meta($id, $key, $value) { $GLOBALS['order_meta'][$id][$key] = $value; }
 function wc_get_logger() { return new class {
     public function error($message, $context) { $GLOBALS['logs'][] = [$message, $context]; }
+    public function warning($message, $context) { $GLOBALS['logs'][] = [$message, $context]; }
+    public function debug($message, $context) { $GLOBALS['logs'][] = [$message, $context]; }
 }; }
 
 class WC_Payment_Gateway {
@@ -77,8 +79,9 @@ class CapturingGateway extends Spin_Block_Gateway {
     private DigitalFemsa\Api\OrdersApi $api;
     public array $history = [];
     public function __construct() {
+        $this->settings = ['api_key' => 'key_test_placeholder', 'environment' => 'test'];
         $handler = GuzzleHttp\HandlerStack::create(new GuzzleHttp\Handler\MockHandler([
-            new GuzzleHttp\Psr7\Response(200, ['Content-Type' => 'application/json'], '{"id":"ord_test_only","payment_status":"pending_payment"}'),
+            new GuzzleHttp\Psr7\Response(200, ['Content-Type' => 'application/json'], '{"id":"ord_test_only","livemode":false,"payment_status":"pending_payment"}'),
         ]));
         $handler->push(GuzzleHttp\Middleware::history($this->history));
         $config = new DigitalFemsa\Configuration();

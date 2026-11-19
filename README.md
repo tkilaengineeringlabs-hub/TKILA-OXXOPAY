@@ -1,71 +1,60 @@
-[![PHP](https://img.shields.io/badge/PHP-v8.1-success.svg)](https://www.php.net/)
-[![WooCommerce](https://img.shields.io/badge/WooCommerce-10.3.0-success.svg)](https://woocommerce.com/)
+# Tkila OXXO PAY v1.0.21
 
-# Tkila OXXO PAY
+Pasarela OXXO PAY para WooCommerce, personalizada por **Tkila Intelligence Labs** sobre el plugin de Digital FEMSA. La versión 1.0.21 conserva la lógica funcional de pagos de v1.0.15 y añade el ticket PNG con código de barras generado y validado localmente.
 
-Personalizado por **Tkila Intelligence Labs** para WooCommerce. Basado en el plugin de Digital FEMSA; conserva la integración con su API y los avisos de licencia originales.
+## Funcionalidades
 
-## Content
+- Referencias OXXO PAY con vigencia de 48 horas y pedidos pendientes hasta la confirmación validada.
+- Webhooks existentes vinculados al identificador remoto guardado del pedido.
+- Integración TeraWallet conservada: guard de checkout y soporte de pago dividido para staging. El split permanece deshabilitado por defecto y depende de `TKILA_OXXO_WALLET_SPLIT_STAGING`; no se habilita automáticamente en producción.
+- Pantalla personalizada con importe, pedido, referencia completa, código de barras, vencimiento e instrucciones, además de acceso a Google Maps.
+- Ticket PNG de alta resolución con el diseño de la tarjeta y logotipos locales, sin botones ni contador regresivo.
+- Generación local de Code 128, conservando la referencia exacta y los ceros iniciales. El código del PNG final se decodifica antes de permitir la descarga; si no coincide, no se descarga un ticket incompleto.
+- Exportación sin solicitudes a FEMSA, imágenes externas ni servicios de terceros. Las bibliotecas JavaScript y sus licencias están incluidas en el plugin.
 
-1. [About](#about)
-    * [What the project does](#what-the-project-does)
-    * [Why it's useful](#why-its-useful)
-    * [Technologies used](#technologies-used)
-    * [Compatibility](#compatibility)
+## Instalación o actualización
 
-2. [How to set up the plugin](#how-to-set-up-the-plugin)
-    * [Prerequisites](#prerequisites)
-    * [Installation](#installation)
+Requisitos: WordPress, WooCommerce activo y PHP **8.1 o posterior**. Las pruebas de integración simuladas utilizan fuentes fijadas de WordPress 6.8.3 y WooCommerce 10.3.5; esto no sustituye la validación del sitio y sus extensiones.
 
-3. [License](#license)
+1. Descarga **`tkila-oxxo-pay-v1.0.21-recovery.zip`** desde la [Release v1.0.21](https://github.com/tkilaengineeringlabs-hub/TKILA-OXXOPAY/releases/tag/v1.0.21). Utiliza ese archivo instalable; el ZIP automático de código fuente de GitHub no incorpora todas las dependencias de ejecución.
+2. En WordPress, abre **Plugins → Añadir nuevo → Subir plugin** y selecciona el ZIP. Para actualizar, reemplaza la versión existente sin desinstalarla.
+3. Activa WooCommerce y Tkila OXXO PAY.
+4. Configura el entorno y sus credenciales en **WooCommerce → Ajustes → Pagos → OXXO PAY**. Las credenciales se configuran únicamente en el sitio; no se incluyen en este repositorio.
+5. Configura el webhook existente `https://tusitio.com/?wc-api=wc_spin` en Digital FEMSA, sustituyendo el dominio.
+6. Comprueba creación de referencia, confirmación y descarga del ticket en staging antes de usar pagos reales.
 
-## About
+La publicación en GitHub no despliega el plugin ni modifica la configuración de WordPress.
 
-### What the project does
+## TeraWallet
 
-**Tkila OXXO PAY — Tkila Intelligence Labs** permite emitir referencias para pago en efectivo en OXXO. Requisitos de Cannaland: vigencia fija de **48 horas**, pedidos en estado **pendiente de pago** hasta confirmación verificada, y un botón en la página de confirmación para buscar tiendas OXXO en **Google Maps**. Los pedidos confirmados se completan mediante el webhook validado contra el ID remoto guardado.
+La versión conserva íntegros los archivos funcionales de v1.0.15. El soporte de staging exige las condiciones y marcas del débito original; no cambia el saldo, los cálculos ni el ciclo de reembolso de TeraWallet. Consulta [la investigación de compatibilidad](docs/terawallet-compatibility.md), [las pruebas](tests/README.md) y las limitaciones de validación antes de habilitar un split.
 
-**Nota:** el saldo parcial de TeraWallet se bloquea preventivamente; aún no se ha habilitado la combinación de billetera + OXXO PAY. Las pruebas automatizadas son simuladas, no validación de pagos reales con FEMSA.
+## Pruebas y empaquetado
 
-The Tkila OXXO PAY plugin project is designed to function as a connector between WooCommerce and OXXO. This is an Open Source and free plugin. It bundles functionality to process cash payments securely as well as send email notifications to your customers when they complete a successful purchase.
+La [documentación de recuperación](RECOVERY.md) describe las dependencias, la base congelada v1.0.15 y las verificaciones. El código del exportador está en `resources/js/ticket/export.js`; el bundle distribuido, en `assets/js/oxxo-ticket.js`.
 
-### Why it's useful
+Las verificaciones incluyen:
 
-The system facilitates the receipt of cash payments via OXXO and the integration of these payments on WooCommerce. This is useful for companies and users who wish to offer a cash payment option for their WooCommerce shops.
+- SHA-256 de los 313 PHP de referencia, permitiendo únicamente las excepciones autorizadas de plantilla y cabecera de versión.
+- Siete suites PHP sobre importes, checkout, ambiente, TeraWallet, renderizado y propiedad de webhooks.
+- Compilación reproducible con versiones fijadas de las bibliotecas locales.
+- Chrome real con descarga y decodificación de PNG: escritorio, móvil emulado, recursos bloqueados, ceros iniciales y referencias largas.
+- Rechazo de referencias inválidas, fallos de canvas o logotipo y PNG incompletos o corruptos.
+- Comparación del Code 128 generado con el ejemplo de imagen publicado por Digital FEMSA.
+- Validación de estructura, archivos e integridad del ZIP instalable.
 
-### Technologies used
+Con la base de pruebas y las dependencias descritas en `RECOVERY.md` preparadas:
 
-* [PHP >= 8.1](https://www.php.net/)
-* [Femsa PHP library](https://github.com/digitalfemsa/femsa-php)
-* [WooCommerce](https://woocommerce.com/)
+```sh
+NODE_PATH=/ruta/dependencias-ticket/node_modules:/ruta/dependencias-pruebas/node_modules \
+SPIN_TEST_SOURCES=/ruta/hook-sources \
+python3 scripts/package-recovery.py
+```
 
-### Compatibility
+El paquete incorpora el SDK PHP y los assets de ejecución. Excluye `node_modules`, pruebas, herramientas de desarrollo y archivos temporales. La base ZIP de v1.0.15 bajo `tests/fixtures` es una referencia de integridad para desarrollo, no el instalador actual.
 
-This plugin has been tested on:
+Las pruebas de pagos son simuladas; las pruebas PNG utilizan navegador real y decodificación por software. No acreditan una transacción real con FEMSA, aceptación física en caja ni una instalación posterior al cambio en Horsements.
 
-* WordPress 6.8.3
-* WooCommerce 10.3.5
+## Licencia y atribución
 
-## How to set up the plugin
-
-### Prerequisites
-- Install [PHP >= 8.1](https://www.php.net/downloads.php)
-
-### Installation
-
-1. Log in to your WordPress Dashboard.
-2. Navigate to Plugins and access the plugins menu from the dashboard.
-3. Click on "Add New" and enter "Spin Payment Gateway" in the search field. Hit the "Search Plugins" button to find the desired plugin.
-4. Explore the DigitalFemsa plugin details to gather additional information before proceeding.
-5. Install the plugin effortlessly by clicking on the "Install Now" button.
-6. API Key Configuration:
-    * Head to WooCommerce > Settings > Checkout in your WordPress Dashboard.
-    * Create your API keys from your DigitalFemsa account at https://panel.digitalfemsa.io
-    * Enter the API keys in the designated fields to link your DigitalFemsa account with WooCommerce.
-7. Webhook Configuration:
-    * To dynamically manage order statuses for offline payments, set up a webhook in your DigitalFemsa account.
-    * Add the following URL as a webhook in your DigitalFemsa account: `https://tusitio.com/?wc-api=wc_spin`. Replace `tusitio.com` with your domain name.
-
-### License
-
-Developed in Mexico by [DigitalFemsa](https://www.digitalfemsa.com). Available under the [MIT License](LICENSE).
+Desarrollado originalmente en México por [Digital FEMSA](https://www.digitalfemsa.com) y personalizado por Tkila Intelligence Labs. Se conservan la [licencia MIT original](LICENSE) y los [avisos de las bibliotecas del ticket](assets/js/oxxo-ticket.LICENSE.txt).

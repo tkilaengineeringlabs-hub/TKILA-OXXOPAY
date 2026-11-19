@@ -1,0 +1,29 @@
+name: Tkila OXXO PAY staging checks
+on:
+  push:
+    branches:
+      - feature/terawallet-split-staging
+  workflow_dispatch:
+jobs:
+  php-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+      - name: Install SDK
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: PHP syntax
+        run: |
+          for file in spin_checkout.php spin_plugin.php spin_wallet_guard.php spin_wallet_split.php spin_gateway_helper.php spin_block_gateway.php tests/*.php; do php -l "$file"; done
+      - name: Prepare pinned checkout dependencies
+        run: sh tests/fetch-hook-sources.sh
+      - name: Run plugin unit and guard tests
+        run: |
+          php tests/split-wallet.php
+          php tests/split-integration.php
+          php tests/amounts.php
+          php tests/checkout-guard.php
+          php tests/webhook-ownership.php

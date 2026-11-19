@@ -2,11 +2,13 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
+require_once __DIR__ . '/version.php';
+
 /*
 Plugin Name: Tkila OXXO PAY
 Plugin URI: https://github.com/tkilaengineeringlabs-hub/TKILA-OXXOPAY
 Description: Pasarela OXXO PAY para WooCommerce, personalizada por Tkila Intelligence Labs.
-Version:1.0.12
+Version: 1.0.21
 Author: Tkila Intelligence Labs
 Author URI: https://github.com/tkilaengineeringlabs-hub
 License: GNU General Public License v3.0
@@ -24,6 +26,7 @@ function spin_checkout_init_your_gateway()
     if (class_exists('WC_Payment_Gateway'))
     {
         include_once('spin_gateway_helper.php');
+        include_once('spin_wallet_split.php');
         include_once('spin_wallet_guard.php');
         include_once('spin_plugin.php');
         include_once('spin_block_gateway.php');

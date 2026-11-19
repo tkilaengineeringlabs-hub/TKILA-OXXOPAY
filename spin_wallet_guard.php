@@ -1,6 +1,7 @@
 <?php
 
 if ( ! defined( 'ABSPATH' ) ) exit;
+require_once(__DIR__ . '/spin_wallet_split.php');
 
 final class Spin_Wallet_Guard
 {
@@ -23,6 +24,22 @@ final class Spin_Wallet_Guard
         return __('OXXO PAY todavía no admite pagos parciales con billetera ni ajustes negativos. Desactiva el pago parcial o elige otro método de pago.', 'Spin');
     }
 
+    private static function staging_split_allowed(): bool
+    {
+        if (!Tkila_Oxxo_Wallet_Split::enabled() || !function_exists('woo_wallet')) {
+            return false;
+        }
+        $wallet = woo_wallet();
+        if (!isset($wallet->settings_api)) {
+            return false;
+        }
+        // In staging, require a debit at order placement. TeraWallet owns
+        // cancellation refunds; the gateway never directly moves wallet funds.
+        return $wallet->settings_api->get_option(
+            'partial_payment_debit_on', '_wallet_settings_general', 'order_created'
+        ) === 'order_created';
+    }
+
     private static function wallet_active(): bool
     {
         return function_exists('woo_wallet') || class_exists('Woo_Wallet');
@@ -30,6 +47,14 @@ final class Spin_Wallet_Guard
 
     private static function order_blocked($order): bool
     {
+        if (self::staging_split_allowed()) {
+            try {
+                Tkila_Oxxo_Wallet_Split::plan($order);
+                return false;
+            } catch (DomainException $exception) {
+                return true;
+            }
+        }
         foreach ($order->get_fees() as $fee) {
             $amount = $fee->get_total();
             if (!is_numeric($amount) || (float) $amount < 0 || (float) $fee->get_total_tax() < 0) {
@@ -43,6 +68,25 @@ final class Spin_Wallet_Guard
     {
         if (!$cart) {
             return self::wallet_active();
+        }
+        if (self::staging_split_allowed()) {
+            $wallet = 0;
+            $pro_discount = 0;
+            foreach ($cart->get_fees() as $fee) {
+                if (!isset($fee->amount) || !is_numeric($fee->amount)) {
+                    return true;
+                }
+                if ((float) $fee->amount < 0) {
+                    if (($fee->id ?? '') === '_via_wallet_partial_payment') {
+                        if (++$wallet > 1) { return true; }
+                    } elseif (($fee->id ?? '') === '_wallet_pay_discount') {
+                        if (++$pro_discount > 1) { return true; }
+                    } else {
+                        return true;
+                    }
+                }
+            }
+            return $pro_discount > 0 && $wallet === 0;
         }
         foreach ($cart->get_fees() as $fee) {
             if (!isset($fee->amount) || !is_numeric($fee->amount) || (float) $fee->amount < 0) {
