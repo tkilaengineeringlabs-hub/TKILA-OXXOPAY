@@ -1,6 +1,6 @@
 <?php
 /**
- * Tkila OXXO PAY - isolated wallet remainder collection plan.
+ * Cannaland OXXO PAY - isolated wallet remainder collection plan.
  *
  * This is a collection order for the unpaid remainder, NOT a replacement
  * invoice or a representation of the original WooCommerce product/tax lines.
@@ -81,7 +81,7 @@ final class Tkila_Oxxo_Wallet_Split
                 'name' => 'Saldo pendiente pedido WooCommerce #' . (int) $order->get_id(),
                 'unit_price' => $pending_cents,
                 'quantity' => 1,
-                'tags' => ['WooCommerce', 'Tkila OXXO PAY', 'wallet-remainder'],
+                'tags' => ['WooCommerce', 'Cannaland OXXO PAY', 'wallet-remainder'],
                 'metadata' => ['soft_validations' => true],
             ]],
             'metadata' => [
