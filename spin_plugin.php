@@ -20,13 +20,13 @@ class Spin_Plugin extends WC_Payment_Gateway
 {
 	public $version  = TKILA_OXXO_PAY_VERSION;
 
-    public $name = "Tkila OXXO PAY";
+    public $name = "Cannaland OXXO PAY";
 
-	public $description = "Pasarela OXXO PAY para WooCommerce, personalizada por Tkila Intelligence Labs";
-	public $plugin_name = "Tkila OXXO PAY";
-	public $plugin_URI = "https://github.com/tkilaengineeringlabs-hub/TKILA-OXXOPAY";
+	public $description = "Pasarela OXXO PAY para WooCommerce de Cannaland";
+	public $plugin_name = "Cannaland OXXO PAY";
+	public $plugin_URI = '';
 	public $author = "Tkila Intelligence Labs";
-	public $author_URI = "https://github.com/tkilaengineeringlabs-hub";
+	public $author_URI = '';
 
 	public function spin_get_version()
 	{
