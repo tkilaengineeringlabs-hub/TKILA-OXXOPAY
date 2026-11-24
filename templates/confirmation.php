@@ -5,7 +5,7 @@ $tkila_expiration = wp_date(get_option('date_format') . ' ' . get_option('time_f
 ?>
 <section class="tkila-oxxo" aria-label="<?php esc_attr_e('Instrucciones de pago OXXO PAY', 'Spin'); ?>">
   <header class="tkila-oxxo__header">
-    <div class="tkila-oxxo__brand"><img src="<?php echo esc_url(Spin_Plugin::plugin_url() . '/images/oxxopay.png'); ?>" alt="OXXO PAY"><span>TKILA OXXO PAY</span><h1><?php esc_html_e('Completa tu pago en OXXO', 'Spin'); ?></h1></div>
+    <div class="tkila-oxxo__brand"><img src="<?php echo esc_url(Spin_Plugin::plugin_url() . '/images/oxxopay.png'); ?>" alt="OXXO PAY"><span>CANNALAND OXXO PAY</span><h1><?php esc_html_e('Completa tu pago en OXXO', 'Spin'); ?></h1></div>
     <div class="tkila-oxxo__order"><span><?php esc_html_e('PEDIDO', 'Spin'); ?></span><strong>#<?php echo esc_html($data['order_number']); ?></strong><?php if (!$data['paid']): ?><span class="tkila-oxxo__badge"><?php echo esc_html($tkila_status_label); ?></span><?php endif; ?></div>
   </header>
   <div class="tkila-oxxo__grid">
