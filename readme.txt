@@ -1,18 +1,18 @@
-=== Tkila OXXO PAY ===
+=== Cannaland OXXO PAY ===
 Contributors: fcarrero, perafan18, urielperezb
 Tags: free, cash, mexico, payment gateway
 Requires at least: 5.8
 Tested up to: 6.8.5
 Requires PHP: 8.1
-Stable tag: 1.0.13
+Stable tag: 1.0.21
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
-Tkila OXXO PAY para WooCommerce, personalizado por Tkila Intelligence Labs. Utiliza los servicios de Digital FEMSA para procesar pagos en efectivo.
+Cannaland OXXO PAY para WooCommerce, desarrollado para Cannaland por Tkila Intelligence Labs. Utiliza los servicios de Digital FEMSA para procesar pagos en efectivo.
 
 == Description ==
 
-Tkila OXXO PAY - Pasarela de pagos en efectivo para WooCommerce
+Cannaland OXXO PAY - Pasarela de pagos en efectivo para WooCommerce
 
 This extension enables your customers in Mexico to conveniently pay for their purchases in cash at any of the 25,000 OXXO stores. By integrating this extension, you can offer an alternative payment method that caters to customers who prefer or need to pay with cash. This can expand your customer base and improve your conversion rates by providing more payment options.
 How It Works: Once installed and configured, customers selecting OXXO Pay as their payment method at checkout will receive a unique reference number. They can then visit any OXXO store to complete their payment in cash. Upon payment, the order status in your Magento store will be updated automatically in real time, ensuring a seamless transaction experience for both the merchant and the customer.
