@@ -5,12 +5,10 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 require_once __DIR__ . '/version.php';
 
 /*
-Plugin Name: Tkila OXXO PAY
-Plugin URI: https://github.com/tkilaengineeringlabs-hub/TKILA-OXXOPAY
-Description: Pasarela OXXO PAY para WooCommerce, personalizada por Tkila Intelligence Labs.
+Plugin Name: Cannaland OXXO PAY
+Description: Pasarela OXXO PAY para WooCommerce de Cannaland.
 Version: 1.0.21
 Author: Tkila Intelligence Labs
-Author URI: https://github.com/tkilaengineeringlabs-hub
 License: GNU General Public License v3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 */
