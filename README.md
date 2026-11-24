@@ -1,6 +1,6 @@
-# Tkila OXXO PAY v1.0.21
+# Cannaland OXXO PAY v1.0.21
 
-Pasarela OXXO PAY para WooCommerce, personalizada por **Tkila Intelligence Labs** sobre el plugin de Digital FEMSA. La versión 1.0.21 conserva la lógica funcional de pagos de v1.0.15 y añade el ticket PNG con código de barras generado y validado localmente.
+Pasarela OXXO PAY para WooCommerce de **Cannaland**, desarrollada por **Tkila Intelligence Labs** sobre el plugin de Digital FEMSA. La versión 1.0.21 conserva la lógica funcional de pagos de v1.0.15 y añade el ticket PNG con código de barras generado y validado localmente.
 
 ## Funcionalidades
 
@@ -16,9 +16,9 @@ Pasarela OXXO PAY para WooCommerce, personalizada por **Tkila Intelligence Labs*
 
 Requisitos: WordPress, WooCommerce activo y PHP **8.1 o posterior**. Las pruebas de integración simuladas utilizan fuentes fijadas de WordPress 6.8.3 y WooCommerce 10.3.5; esto no sustituye la validación del sitio y sus extensiones.
 
-1. Descarga **`tkila-oxxo-pay-v1.0.21-recovery.zip`** desde la [Release v1.0.21](https://github.com/tkilaengineeringlabs-hub/TKILA-OXXOPAY/releases/tag/v1.0.21). Utiliza ese archivo instalable; el ZIP automático de código fuente de GitHub no incorpora todas las dependencias de ejecución.
+1. Descarga **`cannaland-oxxo-pay-v1.0.21.zip`** del paquete de entrega correspondiente a la versión 1.0.21. Utiliza ese archivo instalable; el ZIP automático de código fuente de GitHub no incorpora todas las dependencias de ejecución.
 2. En WordPress, abre **Plugins → Añadir nuevo → Subir plugin** y selecciona el ZIP. Para actualizar, reemplaza la versión existente sin desinstalarla.
-3. Activa WooCommerce y Tkila OXXO PAY.
+3. Activa WooCommerce y Cannaland OXXO PAY.
 4. Configura el entorno y sus credenciales en **WooCommerce → Ajustes → Pagos → OXXO PAY**. Las credenciales se configuran únicamente en el sitio; no se incluyen en este repositorio.
 5. Configura el webhook existente `https://tusitio.com/?wc-api=wc_spin` en Digital FEMSA, sustituyendo el dominio.
 6. Comprueba creación de referencia, confirmación y descarga del ticket en staging antes de usar pagos reales.
@@ -57,4 +57,4 @@ Las pruebas de pagos son simuladas; las pruebas PNG utilizan navegador real y de
 
 ## Licencia y atribución
 
-Desarrollado originalmente en México por [Digital FEMSA](https://www.digitalfemsa.com) y personalizado por Tkila Intelligence Labs. Se conservan la [licencia MIT original](LICENSE) y los [avisos de las bibliotecas del ticket](assets/js/oxxo-ticket.LICENSE.txt).
+Desarrollado originalmente en México por [Digital FEMSA](https://www.digitalfemsa.com) y adaptado para Cannaland por Tkila Intelligence Labs. Se conservan la [licencia MIT original](LICENSE) y los [avisos de las bibliotecas del ticket](assets/js/oxxo-ticket.LICENSE.txt).
