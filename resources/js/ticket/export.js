@@ -85,7 +85,7 @@ async function exportTicket(button) {
       if (readBarcode(verified) !== reference) throw new Error('Final PNG barcode mismatch');
     } finally { bitmap.close(); }
     downloadUrl = URL.createObjectURL(png);
-    const link = document.createElement('a');link.href=downloadUrl;link.download='tkila-oxxo-ticket.png';
+    const link = document.createElement('a');link.href=downloadUrl;link.download='cannaland-oxxo-ticket.png';
     document.body.appendChild(link);link.click();link.remove();
     notice.textContent='Ticket descargado';
   } catch (_) {
